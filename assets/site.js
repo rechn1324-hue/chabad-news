@@ -192,13 +192,6 @@
     return '<a class="mini-card" ' + openAttrs(i) + '>' + (showImg(i) ? imgTag(i.i) : noImgArt(i)) +
       '<span class="meta">' + badge(i) + timeTag(i) + '</span><strong dir="auto">' + esc(i.t) + '</strong></a>';
   }
-  function miniFlashes(list) {
-    return '<ul class="mini-flashes">' + list.map(function (i) {
-      return '<li><div><div class="flash-meta"><time data-clock="' + i.d + '">' + S.clock(i.d) + '</time><span class="flash-src">' + esc(srcName(i)) + '</span></div>' +
-        '<p dir="auto">' + (i.own ? esc(i.t) : '<a href="' + esc(S.safeUrl(i.u) || '#') + '" data-open="' + esc(i.id) + '" style="text-decoration:none">' + esc(i.t) + '</a>') + '</p></div>' +
-        (i.i && showImg(i) ? '<a href="' + (i.tv ? esc(shortsUrl(i)) : '#') + '"' + (i.tv ? '' : ' data-open="' + esc(i.id) + '"') + '>' + imgTag(i.i) + '</a>' : '<span></span>') + '</li>';
-    }).join('') + '</ul>';
-  }
   function feedAd(k) {
     var ads = S.activeAds(st.content, 'feed');
     return ads.length ? '<div class="ad-feed block">' + S.adHTML(ads[k % ads.length]) + '</div>' : '';
@@ -296,15 +289,21 @@
       st.list = st.list.filter(function (i) { return i !== lead; });
       html += '<div class="cards" style="margin-bottom:22px">' + cardHTML(lead, true) + '</div>';
     }
-    var fl = liveItems(5);
-    if (fl.length) html += '<div class="only-mobile">' + block('מבזקים', moreBtn('flash', 'לכל המבזקים ←'), miniFlashes(fl), '<span class="dot"></span>') + '</div>';
+    // מבזקים: שורה אחת שגוללים הצידה (בטלפון; במחשב יש עמודת מבזקים)
+    var fl = liveItems(14);
+    if (fl.length) html += '<div class="only-mobile">' + block('מבזקים', moreBtn('flash', 'לכולם ←'), flashRow(fl), '<span class="dot"></span>') + '</div>';
     var wa = S.safeUrl(st.content.settings.whatsappChannel);
     if (wa) html += '<a class="wa-banner" href="' + esc(wa) + '" target="_blank" rel="noopener">' + ICON.wa + '<span>הצטרפו לערוץ הוואטסאפ שלנו<small>כל העדכונים החשובים ישר לטלפון</small></span></a>';
-    var vids = videos().slice(0, 12);
-    if (vids.length) html += block('שורטס', '<a class="more-link" href="shorts.html">לצפייה ←</a>', '<div class="carousel">' + vids.map(reelCard).join('') + '</div>');
-    var com = items.filter(function (i) { return i.c === 'community' && showImg(i); }).sort(byDate).slice(0, 10);
-    if (com.length) html += block('שמחות וקהילה', moreBtn('community'), '<div class="carousel">' + com.map(miniCard).join('') + '</div>');
     return html;
+  }
+
+  function flashRow(list) {
+    return '<div class="carousel flash-row">' + list.map(function (i) {
+      var attrs = i.own ? '' : ' data-open="' + esc(i.id) + '"';
+      return '<a class="flash-card" href="' + esc(S.safeUrl(i.u) || '#') + '"' + attrs + '>' +
+        '<span class="flash-meta"><time data-clock="' + i.d + '">' + S.clock(i.d) + '</time><span class="flash-src">' + esc(srcName(i)) + '</span></span>' +
+        '<span class="flash-card-text" dir="auto">' + esc(headline(i.t)) + '</span></a>';
+    }).join('') + '</div>';
   }
 
   function renderMore() {
@@ -329,26 +328,37 @@
       : '<div class="loading-more"><span class="spinner"></span></div>';
   }
 
-  // רכיב משתנה שמשולב בפיד אחרי כל 6 כרטיסים
+  // רכיב משתנה שמשולב בפיד אחרי כל 6 כרטיסים: קודם שורטס, אחר כך שמחות, פרסומת, מבזקים ועוד
+  var MODULES = ['shorts', 'community', 'ad', 'flashes', 'cat'];
   function homeModule() {
     var n = st.modules++;
-    var kind = n % 4;
-    if (kind === 0) { var ad = feedAd(n); if (ad) return '<div class="wide">' + ad + '</div>'; }
-    if (kind === 1 || kind === 0) {
-      var fl = liveItems(60).slice(5 + n * 2, 5 + n * 2 + 3);
-      if (fl.length) return '<div class="wide">' + block('עוד מבזקים', moreBtn('flash', 'לכל המבזקים ←'), miniFlashes(fl), '<span class="dot"></span>') + '</div>';
+    for (var t = 0; t < MODULES.length; t++) {
+      var html = moduleHTML(MODULES[(n + t) % MODULES.length], n);
+      if (html) return '<div class="wide">' + html + '</div>';
     }
-    if (kind === 2) {
-      var v = videos().slice(12 + n * 3, 12 + n * 3 + 8);
-      if (v.length) return '<div class="wide">' + block('עוד סרטונים', '<a class="more-link" href="shorts.html">שורטס ←</a>', '<div class="carousel">' + v.map(reelCard).join('') + '</div>') + '</div>';
+    return '';
+  }
+  function moduleHTML(kind, n) {
+    var round = Math.floor(n / MODULES.length);
+    if (kind === 'shorts') {
+      var v = videos().slice(round * 12, round * 12 + 12);
+      return v.length ? block(round ? 'עוד שורטס' : 'שורטס', '<a class="more-link" href="shorts.html">לצפייה ←</a>', '<div class="carousel">' + v.map(reelCard).join('') + '</div>') : '';
     }
-    var cats = ['chabad', 'world', 'israel'];
-    var cat = cats[n % cats.length];
+    if (kind === 'community') {
+      var com = allItems().filter(function (i) { return i.c === 'community' && showImg(i); }).sort(byDate).slice(round * 10, round * 10 + 10);
+      return com.length ? block('שמחות וקהילה', moreBtn('community'), '<div class="carousel">' + com.map(miniCard).join('') + '</div>') : '';
+    }
+    if (kind === 'ad') return feedAd(n);
+    if (kind === 'flashes') {
+      var fl = liveItems(120).slice(14 + round * 14, 28 + round * 14);
+      return fl.length ? block('עוד מבזקים', moreBtn('flash', 'לכולם ←'), flashRow(fl), '<span class="dot"></span>') : '';
+    }
+    var cats = ['chabad', 'israel', 'world'];
+    var cat = cats[round % cats.length];
     var names = { chabad: 'עוד מחב״ד', world: 'מהעולם', israel: 'מהארץ' };
     var shownIds = new Set(st.list.slice(0, st.shown + BATCH).map(function (i) { return i.id; }));
-    var picks = allItems().filter(function (i) { return inTab(i, cat) && isStory(i) && !shownIds.has(i.id); }).sort(byDate).slice(n * 4, n * 4 + 8);
-    if (picks.length) return '<div class="wide">' + block(names[cat], moreBtn(cat), '<div class="carousel">' + picks.map(miniCard).join('') + '</div>') + '</div>';
-    return '';
+    var picks = allItems().filter(function (i) { return inTab(i, cat) && isStory(i) && !shownIds.has(i.id); }).sort(byDate).slice(round * 4, round * 4 + 8);
+    return picks.length ? block(names[cat], moreBtn(cat), '<div class="carousel">' + picks.map(miniCard).join('') + '</div>') : '';
   }
 
   // ---------------------------------------------------------- flashes

@@ -236,6 +236,13 @@ body::before { content: ''; position: fixed; inset: 0 0 auto; height: env(safe-a
 .mini-flashes .flash-meta time { font-size: .86rem; }
 .mini-flashes p { margin: 3px 0 0; font-size: .95rem; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-line; overflow-wrap: anywhere; }
 .mini-flashes img { width: 76px; height: 76px; object-fit: cover; border-radius: 10px; background: var(--surface-2); }
+.flash-card {
+  flex: none; width: 250px; height: 128px; display: flex; flex-direction: column; gap: 5px; padding: 10px 12px;
+  background: var(--surface); border-radius: 14px; box-shadow: var(--shadow); border-inline-start: 4px solid var(--brick);
+  text-decoration: none; color: inherit; scroll-snap-align: start; overflow: hidden;
+}
+.flash-card .flash-meta time { font-size: .86rem; }
+.flash-card-text { font-size: .95rem; line-height: 1.42; font-weight: 600; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; overflow-wrap: anywhere; }
 .carousel { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; padding-bottom: 4px; }
 .carousel::-webkit-scrollbar { display: none; }
 .reel-card { flex: none; width: 138px; aspect-ratio: 9 / 16; border-radius: 14px; overflow: hidden; position: relative; background: #000; text-decoration: none; color: #fff; scroll-snap-align: start; box-shadow: var(--shadow); }
