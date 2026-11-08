@@ -361,7 +361,7 @@ async function collect(src) {
     if (src.type === 'wpjson') return parseWP(await fetchText(src.url, { accept: 'application/json', timeout: 30000 }), src);
     return parseFeed(await fetchText(src.url));
   } catch (err) {
-    const fb = ['rss', 'col', 'wpjson'].includes(src.type) ? googleFallback(src) : '';
+    const fb = ['rss', 'col', 'wpjson'].includes(src.type) && !src.noFallback ? googleFallback(src) : '';
     if (!fb) throw err;
     const items = parseFeed(await fetchText(fb));
     items.viaGoogle = String(err.message || err).slice(0, 60);
@@ -642,7 +642,7 @@ async function main() {
       fresh.set(it.id, it);
       n++;
     }
-    status[src.id] = res.viaGoogle ? { ok: 1, n, via: 'google' } : { ok: 1, n };
+    status[src.id] = res.viaGoogle ? { ok: 1, n, via: 'google', why: res.viaGoogle } : { ok: 1, n };
   });
 
   // מיזוג עם מה שנאסף בריצות הקודמות

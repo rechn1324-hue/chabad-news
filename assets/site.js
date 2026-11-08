@@ -48,7 +48,11 @@
   function isStory(i) { return i.c !== 'flash' && i.c !== 'video'; }
   function iso(ms) { try { return new Date(ms).toISOString(); } catch (e) { return ''; } }
   function shortsUrl(i) { return 'shorts.html?id=' + encodeURIComponent(i.id); }
-  function shareUrl(i) { return i.own ? BASE + 's/p-' + encodeURIComponent(i.pid) + '.html' : BASE + 's/' + i.id + '.html'; }
+  function shareUrl(i) {
+    if (i.own) return BASE + 's/p-' + encodeURIComponent(i.pid) + '.html';
+    if (i.client) return BASE + '#a-' + i.id;
+    return BASE + 's/' + i.id + '.html';
+  }
   function toast(msg) {
     var t = $('#toast'); t.textContent = msg; t.hidden = false;
     clearTimeout(toast.t); toast.t = setTimeout(function () { t.hidden = true; }, 2600);
@@ -65,6 +69,49 @@
       };
     });
   }
+  // ---------------------------------------------------------- Chabad Info from the visitor's browser
+  // חב"ד אינפו חוסם את שרתי GitHub, אבל עונה לגולשים. כשהשרת קיבל ממנו רק כותרות (דרך גוגל),
+  // הדפדפן מביא את הכתבות עם התמונות והתקצירים ישירות מהממשק הפתוח שלהם.
+  var CI_SRC = { chabadinfo: 1, 'ci-simcha': 1, 'ci-events': 1, 'ci-avel': 1 };
+  var SIMCHA_RE = /^מזל טוב|מזל טוב[:!]|אירוסי |אירוסין|נישואי |חתונת |בר[- ]?מצוו?ה של|הולדת (הבן|הבת|נכד|נכדה|בן|בת)|ברית מילה|שמחת (ה?נישואין|ה?אירוסין)|בשעה טובה/;
+  var AVEL_RE = /ע["״]ה(\s|$|[,.])|ז["״]ל\s*$|ברוך דיין האמת|^נפטר|נפטרה |הלוויית |הלווית |נלב["״]ע/;
+  function textOf(html) {
+    try { return (new DOMParser().parseFromString(String(html || ''), 'text/html').body.textContent || '').replace(/\s+/g, ' ').trim(); } catch (e) { return ''; }
+  }
+  function ciItem(p) {
+    var media = p._embedded && p._embedded['wp:featuredmedia'] && p._embedded['wp:featuredmedia'][0];
+    var sizes = (media && media.media_details && media.media_details.sizes) || {};
+    var img = (sizes.large || sizes.medium_large || sizes.full || {}).source_url || (media && media.source_url) || '';
+    var t = textOf(p.title && p.title.rendered);
+    var x = textOf(p.excerpt && p.excerpt.rendered).replace(/\s*(\[…\]|…|המשך קריאה.*)$/, '');
+    var it = { id: 'ci' + p.id, t: t, u: p.link, s: 'chabadinfo', c: 'chabad', d: Date.parse((p.date_gmt || '') + 'Z') || Date.now(), x: x.length > 240 ? x.slice(0, 237) + '…' : x, client: 1 };
+    if (/^https:\/\//.test(img)) it.i = img;
+    if (SIMCHA_RE.test(t)) { it.c = 'community'; it.b = 'simcha'; } else if (AVEL_RE.test(t)) { it.c = 'community'; it.b = 'avel'; }
+    return it;
+  }
+  function loadChabadInfo() {
+    var stt = st.news && st.news.status && st.news.status.chabadinfo;
+    if (!stt || !stt.via || !window.fetch || !window.DOMParser) return Promise.resolve(false);
+    try {
+      var cached = JSON.parse(localStorage.getItem('cn-ci') || 'null');
+      if (cached && Date.now() - cached.t < 10 * 60000 && cached.items.length) { st.extra = cached.items; return Promise.resolve(true); }
+    } catch (e) { /* */ }
+    var api = 'https://chabad.info/wp-json/wp/v2/posts?';
+    var fields = '&_embed=wp:featuredmedia&_fields=id,date_gmt,link,title,excerpt,_links,_embedded';
+    var get = function (q) {
+      return fetch(api + q + fields, { mode: 'cors' }).then(function (r) { return r.ok ? r.json() : []; }).then(function (a) { return Array.isArray(a) ? a : []; }, function () { return []; });
+    };
+    return Promise.all([get('per_page=30'), get('categories=401&per_page=10'), get('search=' + encodeURIComponent('מזל טוב') + '&per_page=20')]).then(function (r) {
+      var seenIds = {};
+      var list = r[0].concat(r[1], r[2].filter(function (p) { return SIMCHA_RE.test(textOf(p.title && p.title.rendered)); }))
+        .map(ciItem).filter(function (i) { if (!i.t || seenIds[i.id]) return false; seenIds[i.id] = 1; return true; });
+      if (!list.length) return false;
+      st.extra = list;
+      try { localStorage.setItem('cn-ci', JSON.stringify({ t: Date.now(), items: list })); } catch (e) { /* */ }
+      return true;
+    });
+  }
+
   var poolCache = null;
   function allItems() {
     if (poolCache) return poolCache;
@@ -73,7 +120,10 @@
     var words = c.settings.blockedWords || [];
     var pinned = (c.pinned || []).filter(Boolean).map(function (i) { return Object.assign({}, i, { pin: true }); });
     var pinIds = new Set(pinned.map(function (i) { return i.id; }));
-    var base = (st.news ? st.news.items : []).filter(function (i) { return !pinIds.has(i.id); });
+    var extra = st.extra || [];
+    var base = (st.news ? st.news.items : []).filter(function (i) {
+      return !pinIds.has(i.id) && !(extra.length && CI_SRC[i.s] && /news\.google\./.test(i.u));
+    }).concat(extra);
     poolCache = ownItems().concat(pinned, base).filter(function (i) {
       return !hidden.has(i.id) && !S.isBlocked(i.t + ' ' + (i.x || ''), words);
     });
@@ -676,7 +726,14 @@
         st.known = new Set(news.items.map(function (i) { return i.id; }));
         renderAll();
         var h = location.hash.slice(1);
-        if (h.indexOf('a-') === 0) openSheet(h.slice(2), true);
+        var opened = h.indexOf('a-') === 0 && openSheet(h.slice(2), true);
+        loadChabadInfo().then(function (got) {
+          if (!got) return;
+          poolCache = null;
+          renderStories();
+          if (window.scrollY < 500 && $('#sheet').hidden) renderFeed();
+          if (!opened && h.indexOf('a-') === 0) openSheet(h.slice(2), true);
+        });
         return;
       }
       var fresh = news.items.filter(function (i) { return !st.known.has(i.id) && isStory(i); }).length;

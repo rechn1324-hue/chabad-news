@@ -16,9 +16,9 @@ const CI = (q) => `https://chabad.info/wp-json/wp/v2/posts?${q}&_embed=wp:featur
 export const SOURCES = [
   // ---------- קהילה: שמחות, אירועים, ברוך דיין האמת (נאספים לפני החדשות הכלליות של אותם אתרים) ----------
   // בנוסף, כל כתבה מאתרי חב"ד שהכותרת שלה היא "מזל טוב" / חתונה / אירוסין / ע"ה עוברת אוטומטית למדור הקהילה.
-  { id: 'ci-simcha', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'simcha', lang: 'he', home: 'https://chabad.info', url: CI('search=' + encodeURIComponent('מזל טוב') + '&per_page=30'), titleOnly: 'simcha' },
-  { id: 'ci-events', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'event', lang: 'he', home: 'https://chabad.info', url: CI('categories=399,1102&per_page=10') },
-  { id: 'ci-avel', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'avel', lang: 'he', home: 'https://chabad.info', url: CI('categories=401&per_page=12') },
+  { id: 'ci-simcha', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'simcha', lang: 'he', noFallback: true, home: 'https://chabad.info', url: CI('search=' + encodeURIComponent('מזל טוב') + '&per_page=30'), titleOnly: 'simcha' },
+  { id: 'ci-events', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'event', lang: 'he', noFallback: true, home: 'https://chabad.info', url: CI('categories=399,1102&per_page=10') },
+  { id: 'ci-avel', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'avel', lang: 'he', noFallback: true, home: 'https://chabad.info', url: CI('categories=401&per_page=12') },
 
   // ---------- חב"ד ----------
   { id: 'col', name: 'COL', type: 'col', cat: 'chabad', lang: 'he', url: 'https://col.org.il/main', home: 'https://col.org.il' },
@@ -56,7 +56,7 @@ export const SOURCES = [
   { id: 'ynet-flash', name: 'ynet מבזקים', type: 'rss', cat: 'flash', lang: 'he', url: 'https://www.ynet.co.il/Integration/StoryRss1854.xml', home: 'https://www.ynet.co.il' },
 
   // ---------- וידאו – קודם כל בעברית ----------
-  { id: 'ci-video', name: 'חב״ד אינפו', type: 'wpjson', cat: 'video', lang: 'he', videos: true, home: 'https://chabad.info',
+  { id: 'ci-video', name: 'חב״ד אינפו', type: 'wpjson', cat: 'video', lang: 'he', videos: true, noFallback: true, home: 'https://chabad.info',
     url: 'https://chabad.info/wp-json/wp/v2/posts?categories=6&per_page=12&_embed=wp:featuredmedia&_fields=id,date_gmt,link,title,content,_links,_embedded' },
   { id: 'yt-kikar', name: 'כיכר השבת', type: 'youtube', cat: 'video', lang: 'he', channelId: 'UCKK1JzwJzAVVJToQ4ezjDtg' },
   { id: 'yt-jem', name: 'JEM – הרבי', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UClI7Gc6hGrrk5UY-zxCdrIA' },
@@ -64,7 +64,7 @@ export const SOURCES = [
 
   // ---------- ילדים (מוצג באיזור הילדים) ----------
   { id: 'yt-chabadkids', name: 'ערוץ חב״ד לילדים', type: 'youtube', cat: 'kids', lang: 'he', channelId: 'UCWSfRZYEzQUxcZCruWXGrrA' },
-  { id: 'ci-kids', name: 'חב״ד אינפו – ילדים', type: 'wpjson', cat: 'kids', lang: 'he', home: 'https://chabad.info', url: CI('categories=852&per_page=12') },
+  { id: 'ci-kids', name: 'חב״ד אינפו – ילדים', type: 'wpjson', cat: 'kids', lang: 'he', noFallback: true, home: 'https://chabad.info', url: CI('categories=852&per_page=12') },
 ];
 
 // זיהוי שמחות ואבלים לפי הכותרת (בכתבות מאתרי חב"ד)
