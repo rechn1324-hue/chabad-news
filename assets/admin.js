@@ -7,7 +7,7 @@
   var TOKEN_KEY = 'cn-admin-token';
   var CONTENT_PATH = 'data/content.json';
   var CAT_NAMES = { chabad: 'חב״ד', israel: 'ישראל ופוליטיקה', world: 'עולם', flash: 'מבזקים', video: 'וידאו', community: 'שמחות וקהילה', kids: 'ילדים' };
-  var FILTER_NAMES = { weather: 'מזג אוויר', sports: 'ספורט', gossip: 'רכילות ובידור', lifestyle: 'בריאות, מתכונים ולייפסטייל', markets: 'בורסה וכסף', promo: 'תוכן שיווקי' };
+  var FILTER_NAMES = { women: 'כתבות על נשים ובנות', weather: 'מזג אוויר', sports: 'ספורט', gossip: 'רכילות ובידור', lifestyle: 'בריאות, מתכונים ולייפסטייל', markets: 'בורסה וכסף', promo: 'תוכן שיווקי' };
   var GAME_NAMES = { tank: 'טנק המבצעים', letters: 'בלוני האותיות', 'quiz-small': 'החידון – קטנים', 'quiz-big': 'החידון – גדולים' };
   var PLACEMENTS = {
     top: { name: 'באנר בראש האתר', size: 'מומלץ: 1200×150' },
@@ -363,7 +363,8 @@
       '<h3>ערוץ הוואטסאפ של האתר</h3>' +
       '<div class="field"><label for="g-wa">קישור לערוץ או לקבוצת וואטסאפ <small>(מופיע באתר ככפתור "הצטרפו לערוץ")</small></label><input type="url" id="g-wa" name="whatsappChannel" dir="ltr" placeholder="https://whatsapp.com/channel/…" value="' + esc(s.whatsappChannel || '') + '"></div>' +
       '<h3>תמונות ותוכן</h3>' +
-      '<label class="check"><input type="checkbox" name="generalImages"' + (s.generalImages !== false ? ' checked' : '') + '> להציג תמונות גם מאתרי החדשות הכלליים (ynet, וואלה, מעריב ועוד)</label>' +
+      '<label class="check"><input type="checkbox" name="generalImages"' + (s.generalImages === true ? ' checked' : '') + '> להציג תמונות גם מאתרי החדשות הכלליים (ynet, וואלה, מעריב, טלגרם ועוד)</label>' +
+      '<p class="hint">לא מומלץ: באתרים הכלליים עלולות להופיע תמונות של נשים. כשהאפשרות כבויה, מוצגות תמונות רק מאתרי חב״ד ומאתרים חרדיים.</p>' +
       '<h3>סינון עדכונים משעממים</h3><p class="hint">עדכונים בנושאים המסומנים לא ייכנסו לאתר (לא חל על אתרי חב״ד). השינוי נכנס בעדכון הבא.</p>' +
       Object.keys(FILTER_NAMES).map(function (k) {
         return '<label class="check" style="margin-inline-end:18px"><input type="checkbox" name="f-' + k + '"' + ((s.filters || {})[k] !== false ? ' checked' : '') + '> ' + FILTER_NAMES[k] + '</label>';
@@ -707,6 +708,7 @@
     $('#logout').hidden = true;
     $('#login').hidden = false;
     $('#repo-name').textContent = C.repo;
+    $('#owner-name').textContent = C.owner;
     var err = $('#login-error');
     err.hidden = !msg;
     err.textContent = msg || '';

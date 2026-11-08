@@ -26,7 +26,7 @@ export const SOURCES = [
   { id: 'collive', name: 'COLlive', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://collive.com/feed/', home: 'https://collive.com' },
   { id: 'anash', name: 'Anash.org', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://anash.org/feed/', home: 'https://anash.org' },
   { id: 'crownheights', name: 'CrownHeights.info', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://crownheights.info/feed/', home: 'https://crownheights.info' },
-  { id: 'chabadorg', name: 'Chabad.org', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://www.chabad.org/tools/rss/news_rss.xml', home: 'https://www.chabad.org/news' },
+  { id: 'chabadorg', name: 'Chabad.org', type: 'rss', cat: 'chabad', lang: 'en', general: true, url: 'https://www.chabad.org/tools/rss/news_rss.xml', home: 'https://www.chabad.org/news' },
   // חיפוש בגוגל: כתבות על חב"ד מכל אתר אחר (מוצג עם שם האתר המקורי)
   { id: 'gn-chabad', name: 'חדשות חב״ד בגוגל', type: 'gnews', cat: 'chabad', lang: 'he', showPublisher: true, url: gnews('חב"ד OR ליובאוויטש when:3d'), home: 'https://news.google.com' },
   { id: 'gn-chabad-en', name: 'Chabad · Google News', type: 'gnews', cat: 'chabad', lang: 'en', showPublisher: true, url: gnews('Chabad OR Lubavitch when:3d', 'en'), home: 'https://news.google.com' },
@@ -50,10 +50,10 @@ export const SOURCES = [
   { id: 'yeshivaworld', name: 'Yeshiva World News', type: 'rss', cat: 'world', lang: 'en', url: 'https://www.theyeshivaworld.com/feed', home: 'https://www.theyeshivaworld.com' },
 
   // ---------- מבזקים וציוצים ----------
-  { id: 'tg-amitsegal', name: 'עמית סגל', type: 'telegram', cat: 'flash', lang: 'he', handle: 'amitsegal', home: 'https://t.me/amitsegal' },
-  { id: 'tg-n12chat', name: 'N12 צ׳אט הכתבים', type: 'telegram', cat: 'flash', lang: 'he', handle: 'N12chat', home: 'https://t.me/N12chat' },
-  { id: 'tg-ynet', name: 'ynet בטלגרם', type: 'telegram', cat: 'flash', lang: 'he', handle: 'ynetalerts', home: 'https://t.me/ynetalerts' },
-  { id: 'ynet-flash', name: 'ynet מבזקים', type: 'rss', cat: 'flash', lang: 'he', url: 'https://www.ynet.co.il/Integration/StoryRss1854.xml', home: 'https://www.ynet.co.il' },
+  { id: 'tg-amitsegal', name: 'עמית סגל', type: 'telegram', cat: 'flash', lang: 'he', general: true, handle: 'amitsegal', home: 'https://t.me/amitsegal' },
+  { id: 'tg-n12chat', name: 'N12 צ׳אט הכתבים', type: 'telegram', cat: 'flash', lang: 'he', general: true, handle: 'N12chat', home: 'https://t.me/N12chat' },
+  { id: 'tg-ynet', name: 'ynet בטלגרם', type: 'telegram', cat: 'flash', lang: 'he', general: true, handle: 'ynetalerts', home: 'https://t.me/ynetalerts' },
+  { id: 'ynet-flash', name: 'ynet מבזקים', type: 'rss', cat: 'flash', lang: 'he', general: true, url: 'https://www.ynet.co.il/Integration/StoryRss1854.xml', home: 'https://www.ynet.co.il' },
 
   // ---------- וידאו – קודם כל בעברית ----------
   { id: 'ci-video', name: 'חב״ד אינפו', type: 'wpjson', cat: 'video', lang: 'he', videos: true, noFallback: true, home: 'https://chabad.info',
@@ -71,8 +71,16 @@ export const SOURCES = [
 export const SIMCHA_RE = /^מזל טוב|מזל טוב[:!]|אירוסי |אירוסין|נישואי |חתונת |בר[- ]?מצוו?ה של|הולדת (הבן|הבת|נכד|נכדה|בן|בת)|ברית מילה|שמחת (ה?נישואין|ה?אירוסין)|בשעה טובה|Mazel Tov|Mazal Tov|Engagement:|Wedding:|Bar Mitzvah:/i;
 export const AVEL_RE = /ע["״]ה\b|ז["״]ל\s*$|ברוך דיין האמת|^נפטר|נפטרה |הלוויית |הלווית |נלב["״]ע|^BDE\b|Baruch Dayan|passed away|Levaya/i;
 
-// נושאים "משעממים" שאפשר לסנן (מופעל/כבוי בעמוד הניהול). חלים על חדשות כלליות ומבזקים, לא על אתרי חב"ד.
+// מילה עברית שלמה (עם אותיות שימוש ו/ה/ב/ל/מ/ש/כ לפניה) – כדי ש"נשים" לא יתפוס את "אנשים"
+const heWords = (words) => new RegExp('(?<![\\u05d0-\\u05ea])[והבלמשכ]{0,2}(?:' + words.join('|') + ')(?![\\u05d0-\\u05ea])');
+const WOMEN_HE = heWords(['אישה', 'אשה', 'נשים', 'נערה', 'נערות', 'ילדה', 'תינוקת', 'בנות', 'זמרת', 'שחקנית', 'דוגמנית', 'כוכבת', 'מלכת', 'לוחמת', 'לוחמות',
+  'חיילת', 'חיילות', 'סטודנטית', 'נעדרת', 'נרצחה', 'נפצעה', 'נעצרה', 'נהרגה', 'כלה', 'אשתו', 'אשת', 'גרושתו', 'בעלה', 'שרה', 'שרת', 'חברת הכנסת',
+  'ח"כית', 'ח״כית', 'מנהלת', 'עיתונאית', 'מגישה', 'מאמנת', 'אמא', 'סבתא', 'בתו', 'בתה', 'אחותו', 'אחותה', 'רעייתו', 'גברת', 'אמהות', 'פמיניסט\\S*']);
+const WOMEN_RE = new RegExp(WOMEN_HE.source + '|(?<![\\u05d0-\\u05ea])בת \\d|\\b(woman|women|girls?|actress|wife|mother|daughter|sister|bride|her husband|queen|princess|lady)\\b', 'i');
+
+// נושאים "משעממים" או לא מתאימים שאפשר לסנן (מופעל/כבוי בעמוד הניהול). חלים על חדשות כלליות ומבזקים, לא על אתרי חב"ד.
 export const BORING = {
+  women: WOMEN_RE,
   weather: /מזג[\s-]?ה?אוויר|התחזית|תחזית (ה?מזג|גשם|לסוף|ל?שבוע)|גשמים|גשם (מקומי|ראשון|כבד|יורד)|שרב|חמסין|ממטרים|סופת (חול|רעמים|גשמים)|קרה (ו|ב)|\bweather\b|\bforecast\b|heatwave/i,
   sports: /כדורגל|כדורסל|ליגת|הליגה|אליפות (ה?עולם|אירופה)|מונדיאל|יורוליג|גביע ה|כבש(ה)? שער|ספורט|אולימפי|טניס|פורמולה|הפועל (ת"א|תל אביב|ב"ש|באר שבע|חיפה|ירושלים)|מכבי (ת"א|תל אביב|חיפה)|בית"ר ירושלים|NBA|\bsoccer\b|\bfootball\b|basketball|baseball|\bNFL\b|\bMLB\b|\bNHL\b|Premier League|Champions League|World Cup|Olympic/i,
   gossip: /רכילות|סלב|ריאליטי|האח הגדול|מאסטר ?שף|הישרדות|אירוויזיון|כוכב נולד|הזמרת|השחקנית|הדוגמנית|אופנה|נטפליקס|הוליווד|רייטינג|celebrity|Hollywood|Netflix|reality show|fashion week/i,

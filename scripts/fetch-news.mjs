@@ -15,7 +15,17 @@ import { SOURCES, BORING, SIMCHA_RE, AVEL_RE } from './sources.mjs';
 const ROOT = new URL('../', import.meta.url);
 const F = (p) => new URL(p, ROOT);
 const UA = 'ChabadNewsBot/1.0 (RSS aggregator)';
-const SITE_URL = (process.env.SITE_URL || 'https://rechn1324-hue.github.io/chabad-news/').replace(/\/?$/, '/');
+// כתובת האתר (לעמודי השיתוף): נקבעת לפי המאגר ב-GitHub, גם אם הוא עובר לארגון או לשם אחר
+const SITE_URL = (() => {
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/?$/, '/');
+  const [owner, name] = String(process.env.GITHUB_REPOSITORY || '').split('/');
+  if (owner && name) {
+    return name.toLowerCase() === (owner + '.github.io').toLowerCase()
+      ? `https://${name.toLowerCase()}/`
+      : `https://${owner.toLowerCase()}.github.io/${name}/`;
+  }
+  return 'https://rechn1324-hue.github.io/chabad-news/';
+})();
 const SCORE_TOPIC = 'cnk-scores-7f3a9c2e';
 const MIN = 60e3, HOUR = 60 * MIN, DAY = 24 * HOUR;
 const NOW = Date.now();
@@ -605,7 +615,7 @@ async function updateScores(content) {
 async function main() {
   const content = await readJson(F('data/content.json'), {});
   const settings = content.settings || {};
-  const filters = Object.assign({ weather: true, sports: true, gossip: true, lifestyle: true, markets: true, promo: true }, settings.filters || {});
+  const filters = Object.assign({ women: true, weather: true, sports: true, gossip: true, lifestyle: true, markets: true, promo: true }, settings.filters || {});
   const srcCfg = content.sources || {};
   const disabled = new Set(srcCfg.disabled || []);
   const blocked = settings.blockedWords || [];

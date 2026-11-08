@@ -41,7 +41,14 @@
   }
   function hostOf(u) { try { return new URL(u).hostname.replace(/^www\./, ''); } catch (e) { return ''; } }
   function isGeneral(i) { if (i.own) return false; var s = srcInfo(i); return s ? !!s.g : i.c !== 'chabad'; }
-  function showImg(i) { return !!i.i && (!isGeneral(i) || st.content.settings.generalImages !== false); }
+  function showImg(i) { return !!i.i && (!isGeneral(i) || st.content.settings.generalImages === true); }
+  // כותרת קצרה למבזק: מדלגים על שורה ראשונה קצרה (למשל שם הכתב) כשיש אחריה טקסט
+  function headline(t) {
+    var lines = String(t || '').split('\n').map(function (l) { return l.trim(); }).filter(Boolean);
+    while (lines.length > 1 && (lines[0].length < 22 || lines[0].split(/\s+/).length < 4)) lines.shift();
+    var h = lines.join(' ');
+    return h.length > 170 ? h.slice(0, 167).replace(/\s+\S*$/, '') + '…' : h;
+  }
   function catOf(i) { return i.own ? 'own' : i.c; }
   function byDate(a, b) { return (b.pin ? 1 : 0) - (a.pin ? 1 : 0) || b.d - a.d; }
   function inTab(i, tab) { return tab === 'chabad' ? (i.c === 'chabad' || !!i.ch) : i.c === tab; }
@@ -211,8 +218,12 @@
       list = items.filter(function (i) { return (i.t + ' ' + (i.x || '') + ' ' + srcName(i)).toLowerCase().indexOf(q) >= 0; }).sort(byDate);
     } else if (tab === 'home') {
       // ערבוב: כתבה מחב"ד ↔ כתבה מהאקטואליה והפוליטיקה, לסירוגין
+      // עדיפות למה שמעניין חבדניקים: אתרים חרדיים, נושאים יהודיים, פוליטיקה וביטחון
+      var RELIGIOUS = { bhol: 1, jdn: 1, yeshivaworld: 1, inn: 1, c14: 1, 'yt-kikar': 1 };
+      var INTEREST = /יהוד|אנטישמ|חרד|ישיב|הרב |רבני|רבנות|גיוס|תורה|שבת|בית כנסת|כנסת|ממשלה|בחירות|קואליצי|צה"ל|צה״ל|ביטחון|חטופ|מלחמ|עזה|חיזבאללה|איראן|טראמפ|ארה"ב|נתניהו|ירושלים|הכותל|ארץ ישראל|Jew|antisemit|Israel|Rebbe|rabbi/i;
       var score = function (i) {
-        return (i.pin ? 1e15 : 0) + (i.own ? 6 * 3600e3 : 0) + i.d + (showImg(i) ? 2 * 3600e3 : 0) + (HE.test(i.t) ? 5 * 3600e3 : 0) + Math.min(3, i.k || 0) * 1800e3;
+        return (i.pin ? 1e15 : 0) + (i.own ? 6 * 3600e3 : 0) + i.d + (showImg(i) ? 2 * 3600e3 : 0) + (HE.test(i.t) ? 5 * 3600e3 : 0) +
+          (RELIGIOUS[i.s] ? 3 * 3600e3 : 0) + (INTEREST.test(i.t) ? 3 * 3600e3 : 0) + Math.min(3, i.k || 0) * 1800e3;
       };
       var desc = function (a, b) { return score(b) - score(a); };
       var isCh = function (i) { return i.c === 'chabad' || i.c === 'community' || i.own || i.ch; };
@@ -436,7 +447,7 @@
     var imgs = [];
     if (showImg(i)) {
       imgs.push(i.i);
-      (pv.g || []).forEach(function (g) { if (imgs.indexOf(g) < 0 && (!isGeneral(i) || st.content.settings.generalImages !== false)) imgs.push(g); });
+      (pv.g || []).forEach(function (g) { if (imgs.indexOf(g) < 0 && (!isGeneral(i) || st.content.settings.generalImages === true)) imgs.push(g); });
     }
     var text = pv.b || (i.c === 'flash' ? i.t : i.x) || '';
     var related = allItems().filter(function (x) { return x.id !== i.id && isStory(x) && (x.c === i.c || (i.c === 'flash' && x.c === 'israel')); }).sort(byDate).slice(0, 8);
@@ -511,16 +522,34 @@
       .sort(function (a, b) { return (b.date || 0) - (a.date || 0); })
       .map(function (s) { return { id: 's-' + s.id, img: S.asset(s.image), t: s.text || '', link: S.safeUrl(s.link), d: s.date || Date.now(), own: true }; });
     if (own.length) groups.push({ name: name, slides: own.slice(0, 10) });
-    var since = Date.now() - 36 * 3600e3;
+    var since = Date.now() - 48 * 3600e3;
     var by = {};
     var order = [];
-    allItems().filter(function (i) { return STORY_CATS[i.c] && showImg(i) && i.d > since && !i.own; }).sort(function (a, b) { return b.d - a.d; }).forEach(function (i) {
+    var okText = function (t) { return t.replace(/[^֐-׿]/g, '').length >= 8; };
+    // רק בעברית, רק עם תמונה מותרת ורק עם טקסט של ממש
+    allItems().filter(function (i) { return STORY_CATS[i.c] && i.c !== 'community' && showImg(i) && i.d > since && !i.own && HE.test(i.t); }).sort(function (a, b) { return b.d - a.d; }).forEach(function (i) {
+      var title = i.c === 'flash' ? headline(i.t) : i.t.split('\n')[0];
+      if (!okText(title)) return;
       var n = srcName(i);
       if (!by[n]) { by[n] = []; order.push(n); }
-      if (by[n].length < 8) by[n].push({ id: i.id, img: S.asset(i.i), t: i.t.split('\n')[0], x: i.x || '', d: i.d, item: true });
+      if (by[n].length < 12) by[n].push({ id: i.id, img: S.asset(i.i), t: title, x: i.c === 'flash' ? '' : (i.x || ''), d: i.d, item: true });
+    });
+    // עיגולים לפי נושא: שמחות, סרטונים בעברית, לילדים
+    var topic = function (name, list, map) {
+      var slides = list.map(map).filter(function (s) { return s && s.img && okText(s.t); }).slice(0, 12);
+      if (slides.length) { by[name] = slides; order.push(name); }
+    };
+    topic('שמחות וקהילה', allItems().filter(function (i) { return i.c === 'community' && showImg(i) && HE.test(i.t); }).sort(byDate), function (i) {
+      return { id: i.id, img: S.asset(i.i), t: i.t, x: i.x || '', d: i.d, item: true };
+    });
+    topic('סרטונים', videos().filter(function (i) { return i.i && HE.test(i.t) && i.c === 'video'; }), function (i) {
+      return { id: i.id, img: S.asset(i.i), t: i.t.split('\n')[0], x: '', d: i.d, href: shortsUrl(i), cta: 'צפו בסרטון' };
+    });
+    topic('לילדים', (st.kids || []).filter(function (i) { return i.i && HE.test(i.t); }), function (i) {
+      return { id: 'k-' + i.id, img: i.i, t: i.t, x: i.x || '', d: i.d, href: i.v ? 'shorts.html?c=kids&id=' + encodeURIComponent(i.id) : S.safeUrl(i.u), ext: !i.v, cta: i.v ? 'צפו בסרטון' : 'לכתבה' };
     });
     // סטוריז מעורבבים: מקור חב"די ↔ מקור חדשות, לסירוגין (לפי העדכון האחרון של כל מקור)
-    var CH = /COL|חב״ד|Chabad|Anash|CrownHeights/;
+    var CH = /COL|חב״ד|Chabad|Anash|CrownHeights|שמחות|לילדים/;
     var chG = order.filter(function (n) { return CH.test(n); });
     var nwG = order.filter(function (n) { return !CH.test(n); });
     var mixed = [];
@@ -528,7 +557,7 @@
       if (chG.length) mixed.push(chG.shift());
       if (nwG.length) mixed.push(nwG.shift());
     }
-    mixed.slice(0, 16).forEach(function (n) { groups.push({ name: n, slides: by[n] }); });
+    mixed.slice(0, 24).forEach(function (n) { groups.push({ name: n, slides: by[n] }); });
     return groups;
   }
   function renderStories() {
@@ -577,6 +606,7 @@
       '<div class="story-tap"><button type="button" data-sprev aria-label="הקודם"></button><button type="button" data-snext aria-label="הבא"></button></div>' +
       '<div class="story-text"><h2 dir="auto">' + esc(sl.t) + '</h2>' + (sl.x ? '<p dir="auto">' + esc(sl.x) + '</p>' : '') +
       '<div class="story-cta">' + (sl.item ? '<button class="read" type="button" data-sread="' + esc(sl.id) + '">קראו עוד</button><button class="share" type="button" data-share="' + esc(sl.id) + '">' + 'שיתוף' + '</button>'
+        : sl.href ? '<a class="read" href="' + esc(sl.href) + '"' + (sl.ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(sl.cta || 'לפרטים') + '</a>'
         : (sl.link ? '<a class="read" href="' + esc(sl.link) + '" target="_blank" rel="noopener">לפרטים</a>' : '')) + '</div></div></div>';
     var img = v.querySelector('.story-img');
     img.addEventListener('error', function () { nextSlide(); });
@@ -727,6 +757,7 @@
         renderAll();
         var h = location.hash.slice(1);
         var opened = h.indexOf('a-') === 0 && openSheet(h.slice(2), true);
+        S.getJSON('data/kids.json').then(function (k) { st.kids = (k && k.items) || []; if (!st.story) renderStories(); }, function () {});
         loadChabadInfo().then(function (got) {
           if (!got) return;
           poolCache = null;

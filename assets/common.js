@@ -110,9 +110,9 @@
     var e = emptyContent();
     c = c && typeof c === 'object' ? c : {};
     Object.keys(e).forEach(function (k) { if (c[k] == null) c[k] = e[k]; });
-    c.settings = Object.assign({ siteName: 'חב״ד בזמן אמת', tagline: '', breaking: {}, generalImages: true, blockedWords: [], whatsappChannel: '', filters: {} }, c.settings || {});
+    c.settings = Object.assign({ siteName: 'חב״ד בזמן אמת', tagline: '', breaking: {}, generalImages: false, blockedWords: [], whatsappChannel: '', filters: {} }, c.settings || {});
     c.settings.breaking = c.settings.breaking || {};
-    c.settings.filters = Object.assign({ weather: true, sports: true, gossip: true, lifestyle: true, markets: true, promo: true }, c.settings.filters || {});
+    c.settings.filters = Object.assign({ women: true, weather: true, sports: true, gossip: true, lifestyle: true, markets: true, promo: true }, c.settings.filters || {});
     c.kids = Object.assign({ submitLink: '', gallery: [] }, c.kids || {});
     return c;
   }
