@@ -7,7 +7,7 @@
       "text": "",
       "link": ""
     },
-    "generalImages": false,
+    "generalImages": true,
     "blockedWords": [
       "סקס",
       "פורנו",
@@ -16,7 +16,16 @@
       "porn",
       "nude",
       "sex"
-    ]
+    ],
+    "filters": {
+      "weather": true,
+      "sports": true,
+      "gossip": true,
+      "lifestyle": true,
+      "markets": true,
+      "promo": true
+    },
+    "whatsappChannel": ""
   },
   "posts": [
     {
@@ -48,5 +57,11 @@
   "sources": {
     "disabled": [],
     "extra": []
+  },
+  "stories": [],
+  "hiddenScores": [],
+  "kids": {
+    "submitLink": "",
+    "gallery": []
   }
 }

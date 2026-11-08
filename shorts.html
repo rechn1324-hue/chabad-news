@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>שורטס · חב״ד בזמן אמת</title>
+<meta name="description" content="סרטונים קצרים מחב״ד ומהחדשות – גוללים מסרטון לסרטון.">
+<meta name="theme-color" content="#000000">
+<meta property="og:title" content="שורטס · חב״ד בזמן אמת">
+<meta property="og:description" content="סרטונים קצרים מחב״ד ומהחדשות – גוללים מסרטון לסרטון.">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;600;700;800&family=Frank+Ruhl+Libre:wght@700;900&display=swap">
+<style>
+  /* Shorts: one full-screen black stage, videos stacked vertically with scroll-snap; deliberately dark in both themes. */
+  :root { --bg: #000; --fg: #fff; --muted: rgba(255,255,255,.72); --chip: rgba(255,255,255,.16); --accent: #ff3b4e; --wa: #25d366;
+    --font: 'Assistant', 'Segoe UI', Arial, sans-serif; --display: 'Frank Ruhl Libre', 'Times New Roman', serif; color-scheme: dark; }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font); overflow: hidden; }
+  a { color: inherit; }
+  button { font: inherit; color: inherit; }
+  [hidden] { display: none !important; }
+  :focus-visible { outline: 3px solid #7ab0ff; outline-offset: 2px; }
+  .topbar { position: fixed; inset: 0 0 auto; z-index: 10; display: flex; align-items: center; gap: 10px;
+    padding: calc(10px + env(safe-area-inset-top, 0px)) max(14px, env(safe-area-inset-right, 0px)) 10px max(14px, env(safe-area-inset-left, 0px));
+    background: linear-gradient(to bottom, rgba(0,0,0,.65), transparent); }
+  .back { display: inline-flex; align-items: center; gap: 6px; text-decoration: none; font-weight: 800; background: var(--chip); padding: 7px 14px; border-radius: 999px; }
+  .topbar h1 { margin: 0; font-family: var(--display); font-size: 1.35rem; font-weight: 900; }
+  .modes { margin-inline-start: auto; display: flex; gap: 6px; }
+  .modes a { text-decoration: none; font-weight: 700; font-size: .88rem; padding: 6px 12px; border-radius: 999px; background: var(--chip); }
+  .modes a[aria-current="page"] { background: #fff; color: #000; }
+  .reel { height: 100%; overflow-y: scroll; scroll-snap-type: y mandatory; overscroll-behavior: contain; scrollbar-width: none; }
+  .reel::-webkit-scrollbar { display: none; }
+  .slide { position: relative; height: 100vh; height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always; display: grid; place-items: center; overflow: hidden; }
+  .frame { position: relative; background: #111; overflow: hidden; }
+  .frame.v { height: min(100vh, calc(100vw * 16 / 9)); height: min(100dvh, calc(100vw * 16 / 9)); aspect-ratio: 9 / 16; max-width: 100vw; }
+  .frame.h { width: min(100vw, 980px); aspect-ratio: 16 / 9; }
+  .frame.tg { width: min(100vw, 520px); height: 78vh; height: 78dvh; background: #fff; border-radius: 12px; }
+  .frame img.thumb { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .frame iframe, .frame video { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  .bigplay { position: absolute; inset: 0; margin: auto; width: 76px; height: 76px; border-radius: 50%; background: rgba(0,0,0,.55); border: 2px solid rgba(255,255,255,.8); cursor: pointer; }
+  .bigplay::after { content: ''; position: absolute; inset: 0; margin: auto; width: 0; height: 0; border-block: 14px solid transparent; border-left: 22px solid #fff; translate: 4px 0; }
+  .info { position: absolute; inset-inline: 0; bottom: 0; z-index: 4; pointer-events: none;
+    padding: 60px max(16px, env(safe-area-inset-right, 0px)) calc(22px + env(safe-area-inset-bottom, 0px)) max(84px, env(safe-area-inset-left, 0px));
+    background: linear-gradient(to top, rgba(0,0,0,.85), transparent); }
+  .slide.playing .info { background: linear-gradient(to top, rgba(0,0,0,.75), transparent 70%); }
+  .src { font-weight: 800; font-size: .92rem; color: var(--muted); }
+  .src b { color: #fff; }
+  .info h2 { margin: 6px 0 0; font-size: 1.12rem; line-height: 1.4; font-weight: 700; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .side { position: absolute; inset-inline-end: max(10px, env(safe-area-inset-left, 0px)); bottom: calc(110px + env(safe-area-inset-bottom, 0px)); z-index: 5; display: flex; flex-direction: column; gap: 14px; }
+  .side a, .side button { display: flex; flex-direction: column; align-items: center; gap: 3px; background: none; border: 0; cursor: pointer; text-decoration: none; font-size: .74rem; font-weight: 700; }
+  .side .ic { width: 50px; height: 50px; border-radius: 50%; background: var(--chip); display: grid; place-items: center; backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .side svg { width: 26px; height: 26px; }
+  .side .wa svg { color: var(--wa); }
+  .hint { position: fixed; z-index: 12; top: calc(70px + env(safe-area-inset-top, 0px)); left: 50%; translate: -50% 0; background: rgba(0,0,0,.75); padding: 9px 16px; border-radius: 999px; font-weight: 700; font-size: .9rem; white-space: nowrap; }
+  .endslide { text-align: center; padding: 24px; }
+  .endslide h2 { font-family: var(--display); font-size: 1.8rem; margin: 0 0 10px; }
+  .endslide a { display: inline-block; margin: 8px 6px; padding: 12px 22px; border-radius: 999px; background: #fff; color: #000; font-weight: 800; text-decoration: none; }
+  .loading { height: 100%; display: grid; place-items: center; color: var(--muted); font-weight: 700; }
+  .nav-arrows { position: fixed; inset-inline-start: 18px; top: 50%; translate: 0 -50%; z-index: 10; display: flex; flex-direction: column; gap: 10px; }
+  .nav-arrows button { width: 46px; height: 46px; border-radius: 50%; border: 0; background: var(--chip); cursor: pointer; font-size: 1.2rem; }
+  @media (max-width: 760px), (hover: none) { .nav-arrows { display: none; } }
+  .toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); background: #fff; color: #000; padding: 10px 18px; border-radius: 999px; font-weight: 800; z-index: 20; }
+</style>
+</head>
+<body>
+<header class="topbar">
+  <a class="back" id="back" href="./">→ לאתר</a>
+  <h1>שורטס</h1>
+  <nav class="modes" aria-label="סוג סרטונים">
+    <a href="shorts.html" id="mode-all">הכל</a>
+    <a href="shorts.html?c=kids" id="mode-kids">לילדים</a>
+  </nav>
+</header>
+<main class="reel" id="reel" aria-label="סרטונים"><div class="loading">טוען סרטונים…</div></main>
+<div class="nav-arrows"><button type="button" id="up" aria-label="הסרטון הקודם">▲</button><button type="button" id="down" aria-label="הסרטון הבא">▼</button></div>
+<div class="hint" id="hint" hidden>הסרטונים מתחילים בלי קול – הקישו על הסרטון כדי לשמוע 🔊</div>
+<div class="toast" id="toast" hidden></div>
+<script src="assets/config.js"></script>
+<script src="assets/common.js?v=2"></script>
+<script src="assets/shorts.js?v=2"></script>
+</body>
+</html>

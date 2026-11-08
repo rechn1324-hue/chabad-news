@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap">
-<link rel="stylesheet" href="assets/site.css">
+<link rel="stylesheet" href="assets/site.css?v=2">
 </head>
 <body>
 <header class="masthead">
@@ -43,7 +43,7 @@
 </main>
 
 <script src="assets/config.js"></script>
-<script src="assets/common.js"></script>
+<script src="assets/common.js?v=2"></script>
 <script>
 (function () {
   'use strict';
@@ -84,21 +84,27 @@
       (img && !v ? '<figure><img src="' + esc(img) + '" alt=""></figure>' : '') +
       '<div class="body" dir="auto">' + bodyHTML(p.body) + '</div>' +
       (S.safeUrl(p.link) ? '<p><a class="btn" href="' + esc(S.safeUrl(p.link)) + '" target="_blank" rel="noopener">לקריאה נוספת במקור ←</a></p>' : '') +
-      '<div class="share">' +
+      '<div class="post-share">' +
         '<a class="btn primary" id="wa" target="_blank" rel="noopener">שיתוף בוואטסאפ</a>' +
-        '<button class="btn" id="copy" type="button">העתקת קישור</button>' +
+        '<button class="btn" id="copy" type="button">שיתוף / העתקת קישור</button>' +
       '</div>' +
-      (others.length ? '<section class="sec" style="margin-top:34px"><div class="sec-head"><h2>עוד מהמערכת</h2></div><div class="stories">' +
+      (others.length ? '<section class="block" style="margin-top:34px"><div class="block-head"><h2>עוד מהמערכת</h2></div><div class="cards">' +
         others.map(function (o) {
-          return '<article class="story"><a class="story-a" href="post.html#' + encodeURIComponent(o.id) + '"><div class="story-body"><div class="meta"><time>' +
-            (o.date ? S.ago(o.date) : '') + '</time></div><h3 dir="auto">' + esc(o.title) + '</h3></div></a></article>';
+          var oi = S.asset(o.image);
+          return '<article class="card compact"><a class="card-media" href="post.html#' + encodeURIComponent(o.id) + '">' +
+            (oi ? '<img src="' + esc(oi) + '" alt="" loading="lazy">' : '<span class="noimg-art"><span class="noimg-inner"><b>' + esc(name) + '</b></span></span>') +
+            '</a><div class="card-body"><div class="meta"><time>' + (o.date ? S.ago(o.date) : '') + '</time></div><h3 dir="auto"><a href="post.html#' +
+            encodeURIComponent(o.id) + '">' + esc(o.title) + '</a></h3></div></article>';
         }).join('') + '</div></section>' : '');
-    document.getElementById('wa').href = 'https://wa.me/?text=' + encodeURIComponent(p.title + '\n' + location.href);
+    // קישור שיתוף עם תמונה וכותרת (עמוד שיתוף שנבנה אוטומטית בכל פרסום)
+    var shareU = location.href.replace(/[#?].*$/, '').replace(/[^/]*$/, '') + 's/p-' + encodeURIComponent(p.id) + '.html';
+    document.getElementById('wa').href = 'https://wa.me/?text=' + encodeURIComponent(p.title + '\n' + shareU);
     document.getElementById('copy').addEventListener('click', function (e) {
       var btn = e.currentTarget;
       var done = function () { btn.textContent = 'הקישור הועתק'; setTimeout(function () { btn.textContent = 'העתקת קישור'; }, 2000); };
-      if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, function () { prompt('העתיקו את הקישור:', location.href); });
-      else prompt('העתיקו את הקישור:', location.href);
+      if (navigator.share) { navigator.share({ title: p.title, url: shareU }).catch(function () {}); return; }
+      if (navigator.clipboard) navigator.clipboard.writeText(shareU).then(done, function () { prompt('העתיקו את הקישור:', shareU); });
+      else prompt('העתיקו את הקישור:', shareU);
     });
     window.scrollTo(0, 0);
   }

@@ -1,25 +1,33 @@
 // רשימת המקורות הקבועים של האתר.
 // אפשר לכבות כל מקור, או להוסיף מקורות חדשים (אתר / טלגרם / יוטיוב), מתוך עמוד הניהול – admin.html.
 //
-// type:    rss | gnews | telegram | youtube
-// cat:     chabad | israel | world | flash | video
-// general: true = אתר חדשות כללי. התמונות שלו מוצגות רק אם הופעלה האפשרות בהגדרות האתר.
+// type:    rss | col | wpjson | gnews | telegram | youtube
+// cat:     chabad | israel | world | flash | video | kids
+// general: true = אתר חדשות כללי (אפשר לכבות את התמונות שלו בהגדרות האתר)
+// אתר שחוסם את שרתי GitHub נאסף אוטומטית דרך חדשות גוגל (רק הכתבות של אותו אתר).
 
 const gnews = (q, lang = 'he') =>
   lang === 'he'
     ? `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=he&gl=IL&ceid=IL:he`
     : `https://news.google.com/rss/search?q=${encodeURIComponent(q)}&hl=en-US&gl=US&ceid=US:en`;
 
+const CI = (q) => `https://chabad.info/wp-json/wp/v2/posts?${q}&_embed=wp:featuredmedia&_fields=id,date_gmt,link,title,excerpt,_links,_embedded`;
+
 export const SOURCES = [
+  // ---------- קהילה: שמחות, אירועים, ברוך דיין האמת (נאספים לפני החדשות הכלליות של אותם אתרים) ----------
+  // בנוסף, כל כתבה מאתרי חב"ד שהכותרת שלה היא "מזל טוב" / חתונה / אירוסין / ע"ה עוברת אוטומטית למדור הקהילה.
+  { id: 'ci-simcha', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'simcha', lang: 'he', home: 'https://chabad.info', url: CI('search=' + encodeURIComponent('מזל טוב') + '&per_page=30'), titleOnly: 'simcha' },
+  { id: 'ci-events', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'event', lang: 'he', home: 'https://chabad.info', url: CI('categories=399,1102&per_page=10') },
+  { id: 'ci-avel', name: 'חב״ד אינפו', type: 'wpjson', cat: 'community', sub: 'avel', lang: 'he', home: 'https://chabad.info', url: CI('categories=401&per_page=12') },
+
   // ---------- חב"ד ----------
+  { id: 'col', name: 'COL', type: 'col', cat: 'chabad', lang: 'he', url: 'https://col.org.il/main', home: 'https://col.org.il' },
+  { id: 'chabadinfo', name: 'חב״ד אינפו', type: 'wpjson', cat: 'chabad', lang: 'he', home: 'https://chabad.info', url: CI('per_page=30') },
   { id: 'collive', name: 'COLlive', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://collive.com/feed/', home: 'https://collive.com' },
   { id: 'anash', name: 'Anash.org', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://anash.org/feed/', home: 'https://anash.org' },
   { id: 'crownheights', name: 'CrownHeights.info', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://crownheights.info/feed/', home: 'https://crownheights.info' },
   { id: 'chabadorg', name: 'Chabad.org', type: 'rss', cat: 'chabad', lang: 'en', url: 'https://www.chabad.org/tools/rss/news_rss.xml', home: 'https://www.chabad.org/news' },
-  // COL וחב"ד אינפו לא מפרסמים פיד RSS תקין, ולכן הם נאספים דרך חדשות גוגל – רק הכתבות של האתר עצמו
-  { id: 'col', name: 'COL', type: 'gnews', cat: 'chabad', lang: 'he', url: gnews('site:col.org.il when:3d'), home: 'https://col.org.il' },
-  { id: 'chabadinfo', name: 'חב״ד אינפו', type: 'gnews', cat: 'chabad', lang: 'he', url: gnews('site:chabad.info when:3d'), home: 'https://chabad.info' },
-  // חיפוש כללי בגוגל: כל כתבה שעוסקת בחב"ד, מכל אתר (מוצג עם שם האתר המקורי)
+  // חיפוש בגוגל: כתבות על חב"ד מכל אתר אחר (מוצג עם שם האתר המקורי)
   { id: 'gn-chabad', name: 'חדשות חב״ד בגוגל', type: 'gnews', cat: 'chabad', lang: 'he', showPublisher: true, url: gnews('חב"ד OR ליובאוויטש when:3d'), home: 'https://news.google.com' },
   { id: 'gn-chabad-en', name: 'Chabad · Google News', type: 'gnews', cat: 'chabad', lang: 'en', showPublisher: true, url: gnews('Chabad OR Lubavitch when:3d', 'en'), home: 'https://news.google.com' },
 
@@ -33,7 +41,6 @@ export const SOURCES = [
   { id: 'inn', name: 'ערוץ 7', type: 'rss', cat: 'israel', lang: 'he', general: true, url: 'https://www.inn.co.il/Rss.aspx', home: 'https://www.inn.co.il' },
   { id: 'bhol', name: 'בחדרי חרדים', type: 'rss', cat: 'israel', lang: 'he', url: 'https://www.bhol.co.il/rss', home: 'https://www.bhol.co.il' },
   { id: 'jdn', name: 'JDN', type: 'rss', cat: 'israel', lang: 'he', url: 'https://www.jdn.co.il/feed/', home: 'https://www.jdn.co.il' },
-  { id: 'gn-israel', name: 'גוגל חדשות', type: 'gnews', cat: 'israel', lang: 'he', showPublisher: true, url: 'https://news.google.com/rss?hl=he&gl=IL&ceid=IL:he', home: 'https://news.google.com' },
 
   // ---------- עולם (באנגלית) ----------
   { id: 'toi', name: 'Times of Israel', type: 'rss', cat: 'world', lang: 'en', general: true, url: 'https://www.timesofisrael.com/feed/', home: 'https://www.timesofisrael.com' },
@@ -48,11 +55,28 @@ export const SOURCES = [
   { id: 'tg-ynet', name: 'ynet בטלגרם', type: 'telegram', cat: 'flash', lang: 'he', handle: 'ynetalerts', home: 'https://t.me/ynetalerts' },
   { id: 'ynet-flash', name: 'ynet מבזקים', type: 'rss', cat: 'flash', lang: 'he', url: 'https://www.ynet.co.il/Integration/StoryRss1854.xml', home: 'https://www.ynet.co.il' },
 
-  // ---------- וידאו (יוטיוב) ----------
-  { id: 'yt-jem', name: 'JEM', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UClI7Gc6hGrrk5UY-zxCdrIA' },
+  // ---------- וידאו – קודם כל בעברית ----------
+  { id: 'ci-video', name: 'חב״ד אינפו', type: 'wpjson', cat: 'video', lang: 'he', videos: true, home: 'https://chabad.info',
+    url: 'https://chabad.info/wp-json/wp/v2/posts?categories=6&per_page=12&_embed=wp:featuredmedia&_fields=id,date_gmt,link,title,content,_links,_embedded' },
+  { id: 'yt-kikar', name: 'כיכר השבת', type: 'youtube', cat: 'video', lang: 'he', channelId: 'UCKK1JzwJzAVVJToQ4ezjDtg' },
+  { id: 'yt-jem', name: 'JEM – הרבי', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UClI7Gc6hGrrk5UY-zxCdrIA' },
   { id: 'yt-livingtorah', name: 'Living Torah', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UC8jYVazkLuwMCRJHX285NKg' },
-  { id: 'yt-chabadorg', name: 'Chabad.org', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UCc0y_E87EUnOW2m2mGJU9Gg' },
-  { id: 'yt-collive', name: 'COLlive', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UCaaxzLbU_VGXw7hplnONBlg' },
-  { id: 'yt-chinfo', name: 'CrownHeights.info', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UCt2JcJQsVMcJkb_hpowO6jQ' },
-  { id: 'yt-anash', name: 'Anash.org', type: 'youtube', cat: 'video', lang: 'en', channelId: 'UCC4Kod16470SKvMDeO-6RFg' },
+
+  // ---------- ילדים (מוצג באיזור הילדים) ----------
+  { id: 'yt-chabadkids', name: 'ערוץ חב״ד לילדים', type: 'youtube', cat: 'kids', lang: 'he', channelId: 'UCWSfRZYEzQUxcZCruWXGrrA' },
+  { id: 'ci-kids', name: 'חב״ד אינפו – ילדים', type: 'wpjson', cat: 'kids', lang: 'he', home: 'https://chabad.info', url: CI('categories=852&per_page=12') },
 ];
+
+// זיהוי שמחות ואבלים לפי הכותרת (בכתבות מאתרי חב"ד)
+export const SIMCHA_RE = /^מזל טוב|מזל טוב[:!]|אירוסי |אירוסין|נישואי |חתונת |בר[- ]?מצוו?ה של|הולדת (הבן|הבת|נכד|נכדה|בן|בת)|ברית מילה|שמחת (ה?נישואין|ה?אירוסין)|בשעה טובה|Mazel Tov|Mazal Tov|Engagement:|Wedding:|Bar Mitzvah:/i;
+export const AVEL_RE = /ע["״]ה\b|ז["״]ל\s*$|ברוך דיין האמת|^נפטר|נפטרה |הלוויית |הלווית |נלב["״]ע|^BDE\b|Baruch Dayan|passed away|Levaya/i;
+
+// נושאים "משעממים" שאפשר לסנן (מופעל/כבוי בעמוד הניהול). חלים על חדשות כלליות ומבזקים, לא על אתרי חב"ד.
+export const BORING = {
+  weather: /מזג[\s-]?ה?אוויר|התחזית|תחזית (ה?מזג|גשם|לסוף|ל?שבוע)|גשמים|גשם (מקומי|ראשון|כבד|יורד)|שרב|חמסין|ממטרים|סופת (חול|רעמים|גשמים)|קרה (ו|ב)|\bweather\b|\bforecast\b|heatwave/i,
+  sports: /כדורגל|כדורסל|ליגת|הליגה|אליפות (ה?עולם|אירופה)|מונדיאל|יורוליג|גביע ה|כבש(ה)? שער|ספורט|אולימפי|טניס|פורמולה|הפועל (ת"א|תל אביב|ב"ש|באר שבע|חיפה|ירושלים)|מכבי (ת"א|תל אביב|חיפה)|בית"ר ירושלים|NBA|\bsoccer\b|\bfootball\b|basketball|baseball|\bNFL\b|\bMLB\b|\bNHL\b|Premier League|Champions League|World Cup|Olympic/i,
+  gossip: /רכילות|סלב|ריאליטי|האח הגדול|מאסטר ?שף|הישרדות|אירוויזיון|כוכב נולד|הזמרת|השחקנית|הדוגמנית|אופנה|נטפליקס|הוליווד|רייטינג|celebrity|Hollywood|Netflix|reality show|fashion week/i,
+  lifestyle: /מחקר (חדש|מצא|מגלה|קובע)|דיאטה|ירידה במשקל|מתכון|מתכונים|טיפים|הורוסקופ|מזלות|קוסמטיקה|recipe|\bdiet\b|weight loss|study finds|horoscope/i,
+  markets: /בורסה|מניות|מדד ת"א|ת"א[- ]35|וול סטריט|נאסד"ק|דאו ג'ונס|ביטקוין|קריפטו|שער הדולר|הדולר (נחלש|מתחזק)|\bstocks?\b|Nasdaq|Dow Jones|Bitcoin|crypto/i,
+  promo: /תוכן שיווקי|תוכן מקודם|כתבה פרסומית|בשיתוף פרסומי|בחסות|קופון|sponsored|promoted|advertorial|partner content/i,
+};

@@ -6,7 +6,9 @@
   var API = 'https://api.github.com';
   var TOKEN_KEY = 'cn-admin-token';
   var CONTENT_PATH = 'data/content.json';
-  var CAT_NAMES = { chabad: 'חב״ד', israel: 'ישראל ופוליטיקה', world: 'עולם', flash: 'מבזקים', video: 'וידאו' };
+  var CAT_NAMES = { chabad: 'חב״ד', israel: 'ישראל ופוליטיקה', world: 'עולם', flash: 'מבזקים', video: 'וידאו', community: 'שמחות וקהילה', kids: 'ילדים' };
+  var FILTER_NAMES = { weather: 'מזג אוויר', sports: 'ספורט', gossip: 'רכילות ובידור', lifestyle: 'בריאות, מתכונים ולייפסטייל', markets: 'בורסה וכסף', promo: 'תוכן שיווקי' };
+  var GAME_NAMES = { tank: 'טנק המבצעים', letters: 'בלוני האותיות', 'quiz-small': 'החידון – קטנים', 'quiz-big': 'החידון – גדולים' };
   var PLACEMENTS = {
     top: { name: 'באנר בראש האתר', size: 'מומלץ: 1200×150' },
     feed: { name: 'בין החדשות', size: 'מומלץ: 900×250' },
@@ -30,7 +32,7 @@
   })();
   var REPO = '/repos/' + C.owner + '/' + C.repo;
 
-  var st = { token: '', content: null, sha: '', news: null, view: 'posts', editPost: null, editAd: null, busy: false, autoCat: 'all', autoQ: '' };
+  var st = { token: '', content: null, sha: '', news: null, scores: null, view: 'posts', editPost: null, editAd: null, busy: false, autoCat: 'all', autoQ: '' };
 
   // ---------------------------------------------------------------- storage
   function readToken() {
@@ -198,7 +200,7 @@
       '<div class="row">' +
         '<div class="field"><label for="p-video">סרטון יוטיוב <small>(לא חובה)</small></label><input type="url" id="p-video" name="video" dir="ltr" placeholder="https://www.youtube.com/watch?v=…" value="' + esc(p ? p.video || '' : '') + '"></div>' +
         '<div class="field"><label for="p-link">קישור למקור <small>(לא חובה)</small></label><input type="url" id="p-link" name="link" dir="ltr" placeholder="https://…" value="' + esc(p ? p.link || '' : '') + '"></div>' +
-        '<div class="field"><label for="p-cat">קטגוריה</label><select id="p-cat" name="cat">' + catOptions(p ? p.cat : 'chabad', ['chabad', 'israel', 'world']) + '</select></div>' +
+        '<div class="field"><label for="p-cat">קטגוריה</label><select id="p-cat" name="cat">' + catOptions(p ? p.cat : 'chabad', ['chabad', 'community', 'israel', 'world']) + '</select></div>' +
       '</div>' +
       '<label class="check"><input type="checkbox" name="pinned"' + (p && p.pinned ? ' checked' : '') + '> להציג בראש העמוד הראשי (כתבה ראשית)</label>' +
       '<div class="actions"><button class="btn primary" type="submit">' + (p ? 'שמירת השינויים' : 'פרסום הכתבה') + '</button>' +
@@ -283,7 +285,7 @@
     }).slice(0, 80);
     var byId = {};
     st.news.items.forEach(function (i) { byId[i.id] = i; });
-    var cats = ['all', 'chabad', 'israel', 'world', 'flash', 'video'];
+    var cats = ['all', 'chabad', 'community', 'israel', 'world', 'flash', 'video'];
     return '<div class="panel"><h2>חדשות שנאספו אוטומטית</h2>' +
       '<p class="hint">כאן רואים את מה שהאתר אסף. "הצמדה" מציגה כתבה בראש העמוד הראשי (עד 5). "הסתרה" מורידה כתבה מהאתר.</p>' +
       (c.pinned.length ? '<h3>מוצמדות לראש העמוד</h3><div class="list">' + c.pinned.map(function (i) {
@@ -316,7 +318,7 @@
     var disabled = new Set(c.sources.disabled || []);
     var ids = Object.keys(srcs);
     (c.sources.extra || []).forEach(function (e) { if (ids.indexOf(e.id) < 0) ids.push(e.id); });
-    var groups = ['chabad', 'israel', 'world', 'flash', 'video'];
+    var groups = ['community', 'chabad', 'israel', 'world', 'flash', 'video', 'kids'];
     var extraById = {};
     (c.sources.extra || []).forEach(function (e) { extraById[e.id] = e; });
     var rows = groups.map(function (g) {
@@ -358,15 +360,88 @@
         '<div class="field"><label for="g-btext">טקסט ההודעה</label><input type="text" id="g-btext" name="bText" maxlength="200" value="' + esc(b.text || '') + '"></div>' +
         '<div class="field"><label for="g-blink">קישור <small>(לא חובה)</small></label><input type="url" id="g-blink" name="bLink" dir="ltr" value="' + esc(b.link || '') + '"></div>' +
       '</div>' +
+      '<h3>ערוץ הוואטסאפ של האתר</h3>' +
+      '<div class="field"><label for="g-wa">קישור לערוץ או לקבוצת וואטסאפ <small>(מופיע באתר ככפתור "הצטרפו לערוץ")</small></label><input type="url" id="g-wa" name="whatsappChannel" dir="ltr" placeholder="https://whatsapp.com/channel/…" value="' + esc(s.whatsappChannel || '') + '"></div>' +
       '<h3>תמונות ותוכן</h3>' +
-      '<label class="check"><input type="checkbox" name="generalImages"' + (s.generalImages ? ' checked' : '') + '> להציג תמונות גם מאתרי החדשות הכלליים (ynet, וואלה, מעריב ועוד)</label>' +
-      '<p class="hint">כברירת מחדל מוצגות תמונות רק מאתרי חב״ד ומאתרים חרדיים, ומהאתרים הכלליים מוצגות כותרות בלבד.</p>' +
+      '<label class="check"><input type="checkbox" name="generalImages"' + (s.generalImages !== false ? ' checked' : '') + '> להציג תמונות גם מאתרי החדשות הכלליים (ynet, וואלה, מעריב ועוד)</label>' +
+      '<h3>סינון עדכונים משעממים</h3><p class="hint">עדכונים בנושאים המסומנים לא ייכנסו לאתר (לא חל על אתרי חב״ד). השינוי נכנס בעדכון הבא.</p>' +
+      Object.keys(FILTER_NAMES).map(function (k) {
+        return '<label class="check" style="margin-inline-end:18px"><input type="checkbox" name="f-' + k + '"' + ((s.filters || {})[k] !== false ? ' checked' : '') + '> ' + FILTER_NAMES[k] + '</label>';
+      }).join('') +
       '<div class="field"><label for="g-words">מילים חסומות</label><textarea id="g-words" name="blockedWords">' + esc((s.blockedWords || []).join(', ')) + '</textarea>' +
       '<small>כתבה או מבזק שמכילים אחת מהמילים האלה לא יוצגו באתר. מפרידים בפסיק.</small></div>' +
       '<div class="actions"><button class="btn primary" type="submit">שמירת ההגדרות</button></div></form></div>';
   }
 
-  var VIEWS = { posts: viewPosts, ads: viewAds, flashes: viewFlashes, auto: viewAuto, sources: viewSources, settings: viewSettings };
+  function viewStories() {
+    var list = (st.content.stories || []).slice().sort(function (a, b) { return (b.date || 0) - (a.date || 0); });
+    var today = new Date().toISOString().slice(0, 10);
+    return '<div class="panel"><h2>סטורי חדש</h2>' +
+      '<p class="hint">הסטוריז שלכם מופיעים ראשונים בעיגולים שבראש האתר, לפני הסטוריז האוטומטיים מהאתרים. מתאים לתמונה מאירוע, הודעה או פרסומת. מומלץ תמונה לאורך (כמו בטלפון).</p>' +
+      '<form data-form="story">' +
+      '<div class="field"><span class="label">תמונה</span><div class="img-pick"><img id="st-preview" alt="" hidden>' +
+      '<input type="file" id="st-image" name="imagefile" accept="image/jpeg,image/png,image/webp,image/gif" required></div></div>' +
+      '<div class="field"><label for="st-text">טקסט על התמונה</label><textarea id="st-text" name="text" maxlength="200"></textarea></div>' +
+      '<div class="row">' +
+        '<div class="field"><label for="st-link">קישור לפרטים <small>(לא חובה)</small></label><input type="url" id="st-link" name="link" dir="ltr" placeholder="https://…"></div>' +
+        '<div class="field"><label for="st-until">להוריד בתאריך <small>(ברירת מחדל: אחרי יומיים)</small></label><input type="date" id="st-until" name="until"></div>' +
+      '</div><div class="actions"><button class="btn primary" type="submit">פרסום הסטורי</button></div></form></div>' +
+      '<div class="panel"><h3>הסטוריז שלכם</h3><div class="list">' +
+      (list.length ? list.map(function (s) {
+        var live = !s.until || s.until >= today;
+        return '<div class="list-item"><img class="thumb-sm" src="' + esc(previewSrc(s.image)) + '" alt="">' +
+          '<div><div class="t" dir="auto">' + esc(s.text || 'ללא טקסט') + '</div><div class="sub"><span>' + fmt(s.date) + '</span><span class="tag ' + (live ? 'ok' : '') + '">' + (live ? 'מוצג' : 'הסתיים') + '</span>' +
+          (s.until ? '<span>עד ' + esc(s.until.split('-').reverse().join('.')) + '</span>' : '') + '</div></div>' +
+          '<div class="btns"><button class="btn sm danger" type="button" data-act="story-del" data-id="' + esc(s.id) + '">מחיקה</button></div></div>';
+      }).join('') : '<p class="empty-note">עוד אין סטוריז משלכם.</p>') + '</div></div>';
+  }
+
+  function viewKids() {
+    var k = st.content.kids || { gallery: [] };
+    var gal = (k.gallery || []).slice().sort(function (a, b) { return (b.date || 0) - (a.date || 0); });
+    return '<div class="panel"><h2>איך ילדים שולחים יצירות</h2>' +
+      '<p class="hint">ילדים לא מעלים ישירות לאתר (כדי לשמור עליהם). הם שולחים אליכם – בוואטסאפ או בטופס – ואתם מעלים כאן רק את מה שאישרתם. כתבו מספר וואטסאפ (למשל 0501234567) או קישור לטופס.</p>' +
+      '<form data-form="kidslink"><div class="row"><div class="field"><label for="k-link">וואטסאפ או קישור לשליחת יצירות</label>' +
+      '<input type="text" id="k-link" name="link" dir="ltr" value="' + esc(k.submitLink || '') + '" placeholder="0501234567 או https://…"></div></div>' +
+      '<div class="actions"><button class="btn primary" type="submit">שמירה</button></div></form></div>' +
+      '<div class="panel"><h2>הוספת יצירה לגלריה</h2>' +
+      '<p class="hint">ציור, תמונה, סרטון מיוטיוב או רעיון מעניין שילד שלח. כתבו שם פרטי בלבד.</p>' +
+      '<form data-form="gallery">' +
+      '<div class="row">' +
+        '<div class="field"><label for="g-title">כותרת</label><input type="text" id="g-title" name="title" required maxlength="80" placeholder="למשל: הציור של החנוכייה"></div>' +
+        '<div class="field"><label for="g-name">שם פרטי של הילד/ה</label><input type="text" id="g-name" name="name" maxlength="20"></div>' +
+        '<div class="field"><label for="g-age">גיל</label><input type="text" id="g-age" name="age" maxlength="3" inputmode="numeric"></div>' +
+      '</div>' +
+      '<div class="field"><span class="label">תמונה</span><div class="img-pick"><img id="g-preview" alt="" hidden><input type="file" id="g-image" name="imagefile" accept="image/jpeg,image/png,image/webp,image/gif"></div></div>' +
+      '<div class="row"><div class="field"><label for="g-video">או קישור לסרטון ביוטיוב</label><input type="url" id="g-video" name="video" dir="ltr" placeholder="https://www.youtube.com/watch?v=…"></div></div>' +
+      '<div class="field"><label for="g-text">כמה מילים <small>(לא חובה)</small></label><textarea id="g-text" name="text" maxlength="400"></textarea></div>' +
+      '<div class="actions"><button class="btn primary" type="submit">הוספה לגלריה</button></div></form></div>' +
+      '<div class="panel"><h3>הגלריה (' + gal.length + ')</h3><div class="list">' +
+      (gal.length ? gal.map(function (g) {
+        var thumb = g.image ? previewSrc(g.image) : (S.ytId(g.video) ? 'https://i.ytimg.com/vi/' + S.ytId(g.video) + '/mqdefault.jpg' : '');
+        return '<div class="list-item">' + (thumb ? '<img class="thumb-sm" src="' + esc(thumb) + '" alt="">' : '<span class="noimg"></span>') +
+          '<div><div class="t">' + esc(g.title) + '</div><div class="sub"><span>' + esc(g.name || '') + (g.age ? ', ' + esc(g.age) : '') + '</span><span>' + fmt(g.date) + '</span></div></div>' +
+          '<div class="btns"><button class="btn sm danger" type="button" data-act="gal-del" data-id="' + esc(g.id) + '">מחיקה</button></div></div>';
+      }).join('') : '<p class="empty-note">הגלריה ריקה.</p>') + '</div></div>';
+  }
+
+  function viewScores() {
+    if (!st.scores) return '<div class="panel"><p class="empty-note">טוען את טבלת השיאים…</p></div>';
+    var games = st.scores.games || {};
+    var hidden = new Set(st.content.hiddenScores || []);
+    var keys = Object.keys(games);
+    return '<div class="panel"><h2>טבלת השיאים של איזור הילדים</h2>' +
+      '<p class="hint">הטבלה מתעדכנת כל 15 דקות. שמות עם מילים חסומות לא נכנסים. אם מופיע שם לא מתאים – לחצו "הסתרה" והוא יירד בעדכון הבא.</p>' +
+      (keys.length ? keys.map(function (g) {
+        return '<h3>' + esc(GAME_NAMES[g] || g) + '</h3><div class="list">' + games[g].slice(0, 10).map(function (r, k) {
+          var key = g + '|' + r.n + '|' + r.s;
+          return '<div class="list-item compact"><div><div class="t">' + (k + 1) + '. ' + esc(r.n) + ' – ' + r.s + '</div><div class="sub"><span>' + fmt(r.t) + '</span></div></div>' +
+            '<div class="btns">' + (hidden.has(key) ? '<span class="tag">יוסתר בעדכון הבא</span>' : '<button class="btn sm danger" type="button" data-act="score-hide" data-id="' + esc(key) + '">הסתרה</button>') + '</div></div>';
+        }).join('') + '</div><div style="height:12px"></div>';
+      }).join('') : '<p class="empty-note">עוד אין שיאים. ברגע שילדים ישחקו וישלחו שיא, הוא יופיע כאן.</p>') + '</div>';
+  }
+
+  var VIEWS = { posts: viewPosts, ads: viewAds, flashes: viewFlashes, stories: viewStories, auto: viewAuto, kids: viewKids, scores: viewScores, sources: viewSources, settings: viewSettings };
 
   function render() {
     if (!st.content) return;
@@ -477,12 +552,57 @@
     var words = form.elements.blockedWords.value.split(/[,\n]/).map(function (w) { return w.trim(); }).filter(Boolean);
     var bLink = val(form, 'bLink');
     if (!urlOk(bLink)) return toast('הקישור צריך להתחיל ב-https://', true);
+    var wa = val(form, 'whatsappChannel');
+    if (!urlOk(wa)) return toast('הקישור לוואטסאפ צריך להתחיל ב-https://', true);
+    var filters = {};
+    Object.keys(FILTER_NAMES).forEach(function (k) { filters[k] = form.elements['f-' + k].checked; });
     var next = {
       siteName: val(form, 'siteName') || 'חב״ד בזמן אמת', tagline: val(form, 'tagline'),
       breaking: { active: form.elements.bActive.checked, text: val(form, 'bText'), link: bLink },
-      generalImages: form.elements.generalImages.checked, blockedWords: words,
+      generalImages: form.elements.generalImages.checked, blockedWords: words, whatsappChannel: wa, filters: filters,
     };
     commit('עדכון הגדרות', function (c) { c.settings = Object.assign({}, c.settings, next); });
+  }
+
+  function submitStory(form) {
+    var file = form.elements.imagefile.files[0];
+    if (!file) return toast('צריך לבחור תמונה.', true);
+    var link = val(form, 'link');
+    if (!urlOk(link)) return toast('הקישור צריך להתחיל ב-https://', true);
+    var until = val(form, 'until') || new Date(Date.now() + 2 * 86400000).toISOString().slice(0, 10);
+    setBusy(true);
+    toast('מעלה את התמונה…');
+    uploadImage(file).then(function (img) {
+      var s = { id: newId(), image: img, text: form.elements.text.value.trim(), link: link, until: until, date: Date.now() };
+      return commit('סטורי חדש', function (c) { c.stories = [s].concat(c.stories || []).slice(0, 40); });
+    }, function (e) { setBusy(false); toast(errMsg(e), true); });
+  }
+
+  function submitKidsLink(form) {
+    var v = val(form, 'link');
+    var digits = v.replace(/[\s()-]/g, '');
+    var link = '';
+    if (/^\+?\d{9,15}$/.test(digits)) link = 'https://wa.me/' + digits.replace(/^\+/, '').replace(/^0/, '972');
+    else if (/^https?:\/\//i.test(v)) link = v;
+    else if (v) return toast('כתבו מספר טלפון או קישור שמתחיל ב-https://', true);
+    commit('קישור לשליחת יצירות', function (c) { c.kids = Object.assign({ gallery: [] }, c.kids || {}, { submitLink: link }); });
+  }
+
+  function submitGallery(form) {
+    var title = val(form, 'title');
+    var video = val(form, 'video');
+    var file = form.elements.imagefile.files[0];
+    if (!title) return toast('צריך כותרת.', true);
+    if (!file && !S.ytId(video)) return toast('צריך תמונה או קישור לסרטון ביוטיוב.', true);
+    setBusy(true);
+    toast(file ? 'מעלה את התמונה…' : 'שומר…');
+    (file ? uploadImage(file) : Promise.resolve('')).then(function (img) {
+      var g = { id: newId(), title: title, name: val(form, 'name'), age: val(form, 'age'), image: img, video: video, text: form.elements.text.value.trim(), date: Date.now() };
+      return commit('יצירה חדשה בגלריית הילדים', function (c) {
+        c.kids = Object.assign({ submitLink: '', gallery: [] }, c.kids || {});
+        c.kids.gallery = [g].concat(c.kids.gallery || []).slice(0, 200);
+      });
+    }, function (e) { setBusy(false); toast(errMsg(e), true); });
   }
 
   // ---------------------------------------------------------------- actions
@@ -505,6 +625,19 @@
         break;
       case 'ad-del':
         confirmBtn(btn, function () { commit('מחיקת פרסומת', function (x) { x.ads = x.ads.filter(function (a) { return a.id !== id; }); }); });
+        break;
+      case 'story-del':
+        confirmBtn(btn, function () { commit('מחיקת סטורי', function (x) { x.stories = (x.stories || []).filter(function (s) { return s.id !== id; }); }); });
+        break;
+      case 'gal-del':
+        confirmBtn(btn, function () { commit('מחיקה מגלריית הילדים', function (x) { x.kids.gallery = ((x.kids || {}).gallery || []).filter(function (g) { return g.id !== id; }); }); });
+        break;
+      case 'score-hide':
+        commit('הסתרת שם מטבלת השיאים', function (x) {
+          x.hiddenScores = x.hiddenScores || [];
+          if (x.hiddenScores.indexOf(id) < 0) x.hiddenScores.push(id);
+          x.hiddenScores = x.hiddenScores.slice(-300);
+        });
         break;
       case 'flash-del':
         confirmBtn(btn, function () { commit('מחיקת מבזק', function (x) { x.flashes = x.flashes.filter(function (f) { return f.id !== id; }); }); });
@@ -554,6 +687,9 @@
       return fetch(previewSrc('data/news.json') + '?v=' + Date.now(), { cache: 'no-store' }).then(function (r) { return r.json(); });
     }).then(function (n) { st.news = n; render(); }, function () { /* לא חובה */ });
   }
+  function loadScores() {
+    return S.getJSON('data/scores.json').then(function (s) { st.scores = s; }, function () { st.scores = { games: {} }; }).then(function () { if (st.view === 'scores') render(); });
+  }
 
   function enter() {
     $('#login').hidden = true;
@@ -563,6 +699,7 @@
     if (VIEWS[v]) st.view = v;
     render();
     loadNews();
+    loadScores();
   }
 
   function showLogin(msg) {
@@ -619,7 +756,7 @@
     if (!form) return;
     e.preventDefault();
     if (st.busy) return;
-    ({ post: submitPost, ad: submitAd, flash: submitFlash, source: submitSource, settings: submitSettings })[form.dataset.form](form);
+    ({ post: submitPost, ad: submitAd, flash: submitFlash, source: submitSource, settings: submitSettings, story: submitStory, kidslink: submitKidsLink, gallery: submitGallery })[form.dataset.form](form);
   });
   view.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]');
@@ -627,8 +764,8 @@
   });
   view.addEventListener('change', function (e) {
     var t = e.target;
-    if (t.id === 'p-image' || t.id === 'a-image') {
-      var prev = $(t.id === 'p-image' ? '#p-preview' : '#a-preview');
+    if (t.id === 'p-image' || t.id === 'a-image' || t.id === 'st-image' || t.id === 'g-image') {
+      var prev = $({ 'p-image': '#p-preview', 'a-image': '#a-preview', 'st-image': '#st-preview', 'g-image': '#g-preview' }[t.id]);
       var f = t.files[0];
       if (f) { prev.src = URL.createObjectURL(f); prev.hidden = false; }
     }
