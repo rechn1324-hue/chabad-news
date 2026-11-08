@@ -244,10 +244,29 @@ async function youtubeEntries(src) {
   return parseFeed(await fetchText(`https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`));
 }
 
+// גיבוי: אתר שחוסם את שרתי GitHub נאסף דרך חדשות גוגל (רק הכתבות של אותו אתר)
+function googleFallback(src) {
+  const host = hostOf(src.home || src.url);
+  if (!host || host === 'news.google.com') return '';
+  const q = encodeURIComponent(`site:${host} when:2d`);
+  return src.lang === 'en'
+    ? `https://news.google.com/rss/search?q=${q}&hl=en-US&gl=US&ceid=US:en`
+    : `https://news.google.com/rss/search?q=${q}&hl=he&gl=IL&ceid=IL:he`;
+}
+
 async function collect(src) {
   if (src.type === 'telegram') return parseTelegram(await fetchText(`https://t.me/s/${encodeURIComponent(src.handle)}`, { accept: 'text/html' }));
   if (src.type === 'youtube') return youtubeEntries(src);
-  return parseFeed(await fetchText(src.url));
+  try {
+    if ((process.env.FORCE_FALLBACK || '').split(',').includes(src.id)) throw new Error('forced fallback');
+    return parseFeed(await fetchText(src.url));
+  } catch (err) {
+    const fb = src.type === 'rss' ? googleFallback(src) : '';
+    if (!fb) throw err;
+    const items = parseFeed(await fetchText(fb));
+    items.viaGoogle = String(err.message || err).slice(0, 60);
+    return items;
+  }
 }
 
 // ---------------------------------------------------------------- items
@@ -278,20 +297,22 @@ function isBlocked(text, words) {
   });
 }
 
-function toItem(src, r, directHosts) {
+function toItem(src, r, directHosts, viaGoogle) {
   let title = r.title || '';
   let url = r.link || '';
   if (src.type === 'youtube' && r.videoId) url = 'https://www.youtube.com/watch?v=' + r.videoId;
   if (!/^https?:\/\//i.test(url) || !title) return null;
-  if (src.type === 'gnews') {
+  const google = src.type === 'gnews' || viaGoogle;
+  if (google) {
     if (r.publisher) title = title.replace(new RegExp('\\s+[-–]\\s+' + escRe(r.publisher) + '\\s*$'), '');
     // קידומות מיתוג שגוגל מצרף לכותרות של חלק מהאתרים
     title = title.replace(/^COL\s+מרכז התקשורת החב["״]די\s*[-–|:]\s*/, '').replace(/^חב["״]ד אינפו\s*[-–|:]\s*/, '');
-    if (r.publisherUrl && directHosts.has(hostOf(r.publisherUrl))) return null; // יש לנו את המקור הזה ישירות
+    if (!viaGoogle && r.publisherUrl && directHosts.has(hostOf(r.publisherUrl))) return null; // יש לנו את המקור הזה ישירות
+    if (/^(daily|monthly|yearly)?\s*archives?\b|^(category|tag|page \d+)\b|^ארכיון/i.test(title)) return null; // עמודי ארכיון ולא כתבות
   }
   url = cleanUrl(url);
   const it = { id: idOf(url), t: src.type === 'telegram' ? clip(title, 600) : clip(title, 220), u: url, s: src.id, c: src.cat, d: r.date || 0 };
-  if (src.type !== 'gnews' && src.type !== 'telegram') {
+  if (!google && src.type !== 'telegram') {
     const ex = excerpt(r.desc, title);
     if (ex) it.x = ex;
   }
@@ -365,7 +386,7 @@ async function main() {
     }
     let n = 0;
     for (const r of res) {
-      const it = toItem(src, r, directHosts);
+      const it = toItem(src, r, directHosts, !!res.viaGoogle);
       if (!it || fresh.has(it.id)) continue;
       const tk = normTitle(it.t);
       if (tk.length >= 12 && titles.has(tk)) continue;
@@ -373,7 +394,7 @@ async function main() {
       fresh.set(it.id, it);
       n++;
     }
-    status[src.id] = { ok: 1, n };
+    status[src.id] = res.viaGoogle ? { ok: 1, n, via: 'google' } : { ok: 1, n };
   });
 
   // מיזוג עם מה שכבר נאסף בריצות הקודמות
@@ -440,7 +461,7 @@ async function main() {
 
   const ok = Object.values(status).filter((s) => s.ok).length;
   console.log(`נאספו ${items.length} פריטים מ-${ok}/${ordered.length} מקורות`);
-  for (const [id, s] of Object.entries(status)) console.log(`  ${s.ok ? '✓' : '✗'} ${id.padEnd(16)} ${s.ok ? s.n : s.err}`);
+  for (const [id, s] of Object.entries(status)) console.log(`  ${s.ok ? '✓' : '✗'} ${id.padEnd(16)} ${s.ok ? s.n + (s.via ? ' (דרך גוגל)' : '') : s.err}`);
   const counts = {};
   for (const it of items) counts[it.c] = (counts[it.c] || 0) + 1;
   console.log('  לפי קטגוריה:', JSON.stringify(counts));
