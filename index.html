@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>חב״ד בזמן אמת</title>
+<meta name="description" content="חדשות חב״ד, ישראל והעולם, מבזקים וסרטונים – מתעדכן אוטומטית מסביב לשעון.">
+<meta name="theme-color" content="#12204a">
+<meta property="og:title" content="חב״ד בזמן אמת">
+<meta property="og:description" content="חדשות חב״ד, ישראל והעולם, מבזקים וסרטונים – מתעדכן אוטומטית מסביב לשעון.">
+<meta property="og:type" content="website">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<a class="skip" href="#feed">דלגו לחדשות</a>
+
+<header class="masthead">
+  <div class="wrap mast-row">
+    <a class="brand" href="./" aria-label="לעמוד הראשי">
+      <svg class="logo" viewBox="0 0 64 48" aria-hidden="true">
+        <path class="facade" d="M3 46V23l8.5-12L20 23v-4L32 3l12 16v4l8.5-12L61 23v23z"/>
+        <g class="win">
+          <rect x="7" y="27" width="3" height="5" rx="1"/><rect x="13" y="27" width="3" height="5" rx="1"/>
+          <rect x="7" y="36" width="3" height="5" rx="1"/><rect x="13" y="36" width="3" height="5" rx="1"/>
+          <rect x="48" y="27" width="3" height="5" rx="1"/><rect x="54" y="27" width="3" height="5" rx="1"/>
+          <rect x="48" y="36" width="3" height="5" rx="1"/><rect x="54" y="36" width="3" height="5" rx="1"/>
+          <rect x="24" y="22" width="4" height="6" rx="1"/><rect x="36" y="22" width="4" height="6" rx="1"/>
+          <path d="M28.5 46v-8a3.5 3.5 0 0 1 7 0v8z"/><circle cx="32" cy="13" r="2"/>
+        </g>
+      </svg>
+      <span>
+        <strong class="brand-name" id="site-name">חב״ד בזמן אמת</strong>
+        <span class="brand-tag" id="site-tagline">חדשות חב״ד, ישראל והעולם – מתעדכן אוטומטית מסביב לשעון</span>
+      </span>
+    </a>
+    <div class="mast-meta">
+      <div class="dates"><span class="heb" id="heb-date"></span><span class="sep">|</span><span class="greg" id="greg-date"></span></div>
+      <div class="status" id="status" role="status"><span class="pulse"></span><span id="status-text">טוען חדשות…</span></div>
+    </div>
+    <nav class="mast-nav" aria-label="ניווט">
+      <a class="kids-link" href="kids/">איזור הילדים</a>
+    </nav>
+  </div>
+</header>
+
+<div class="breaking" id="breaking" hidden>
+  <div class="wrap"><span class="breaking-label">דחוף</span><span id="breaking-text"></span></div>
+</div>
+
+<div class="ticker" id="ticker" hidden>
+  <div class="wrap ticker-row">
+    <span class="ticker-label">מבזקים</span>
+    <div class="ticker-viewport"><div class="ticker-track" id="ticker-track"></div></div>
+  </div>
+</div>
+
+<div class="wrap ad-top" id="ad-top" hidden></div>
+
+<main class="wrap layout">
+  <aside class="live" aria-labelledby="live-title">
+    <div class="live-head">
+      <span class="live-dot" aria-hidden="true"></span>
+      <h2 id="live-title">מבזקים</h2>
+      <span class="live-sub">עדכונים קצרים מטלגרם, מהכתבים ומאתרי החדשות</span>
+    </div>
+    <ol class="live-list" id="live-list">
+      <li class="flash"><span class="skel" style="height:12px;width:40%"></span><span class="skel" style="height:14px;margin-top:8px"></span><span class="skel" style="height:14px;margin-top:6px;width:80%"></span></li>
+      <li class="flash"><span class="skel" style="height:12px;width:35%"></span><span class="skel" style="height:14px;margin-top:8px"></span><span class="skel" style="height:14px;margin-top:6px;width:70%"></span></li>
+      <li class="flash"><span class="skel" style="height:12px;width:45%"></span><span class="skel" style="height:14px;margin-top:8px"></span></li>
+    </ol>
+  </aside>
+
+  <section class="feed" id="feed" aria-label="חדשות">
+    <div class="feed-tools">
+      <div class="tabs" role="tablist" id="tabs" aria-label="קטגוריות">
+        <button class="tab" role="tab" data-tab="home" aria-selected="true">ראשי</button>
+        <button class="tab" role="tab" data-tab="flash" aria-selected="false">מבזקים</button>
+        <button class="tab" role="tab" data-tab="chabad" aria-selected="false">חב״ד</button>
+        <button class="tab" role="tab" data-tab="israel" aria-selected="false">ישראל ופוליטיקה</button>
+        <button class="tab" role="tab" data-tab="world" aria-selected="false">עולם</button>
+        <button class="tab" role="tab" data-tab="video" aria-selected="false">וידאו</button>
+      </div>
+      <label class="search">
+        <span hidden>חיפוש</span>
+        <input id="q" type="search" placeholder="חיפוש בחדשות" autocomplete="off">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      </label>
+    </div>
+    <button class="new-pill" id="new-pill" hidden></button>
+    <div id="content">
+      <div class="top">
+        <div class="lead"><span class="skel" style="aspect-ratio:16/9;border-radius:0"></span><div class="lead-body"><span class="skel" style="height:26px"></span><span class="skel" style="height:26px;width:70%"></span></div></div>
+        <div class="top-list"><span class="skel" style="height:18px;margin-top:16px"></span><span class="skel" style="height:18px;margin-top:22px"></span><span class="skel" style="height:18px;margin-top:22px;width:80%"></span></div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="rail" aria-label="וידאו ופרסומות">
+    <section class="rail-block" id="rail-videos" hidden>
+      <h2 class="rail-title">וידאו <button data-goto="video">לכל הסרטונים ←</button></h2>
+      <div id="rail-video-list"></div>
+    </section>
+    <div class="ad-side" id="ad-side"></div>
+    <a class="kids-promo" href="kids/">
+      <span><strong>איזור הילדים</strong><span>טנק המבצעים, חידון, סביבון, צביעה ועוד</span></span>
+      <svg viewBox="0 0 76 56" aria-hidden="true">
+        <rect x="4" y="16" width="56" height="26" rx="5" fill="#fff"/>
+        <rect x="4" y="30" width="56" height="5" fill="#2346b0"/>
+        <path d="M60 22h7l5 9v11H60z" fill="#fff"/><path d="M62 24h4l3.6 6H62z" fill="#9fd3ff"/>
+        <rect x="12" y="6" width="36" height="10" rx="2" fill="#12204a"/>
+        <circle cx="18" cy="44" r="6" fill="#12204a"/><circle cx="56" cy="44" r="6" fill="#12204a"/>
+        <circle cx="18" cy="44" r="2.4" fill="#ffd23f"/><circle cx="56" cy="44" r="2.4" fill="#ffd23f"/>
+      </svg>
+    </a>
+  </aside>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap foot-grid">
+    <div>
+      <h2 id="foot-name">חב״ד בזמן אמת</h2>
+      <p>האתר אוסף כותרות אוטומטית מאתרי חדשות, מערוצי טלגרם ומיוטיוב, ומתעדכן כל 15 דקות. כל כותרת מובילה לכתבה המקורית.</p>
+    </div>
+    <div>
+      <h2>המקורות שלנו</h2>
+      <div class="foot-sources" id="foot-sources"></div>
+    </div>
+    <div>
+      <h2>האתר</h2>
+      <p><a href="kids/">איזור הילדים</a></p>
+      <p><a href="admin.html">כניסת מנהל</a></p>
+      <p>הזכויות על התכנים שמורות לבעליהם.</p>
+    </div>
+  </div>
+</footer>
+
+<dialog class="player" id="player" aria-label="נגן וידאו">
+  <div class="player-frame" id="player-frame"></div>
+  <div class="player-bar">
+    <h3 id="player-title" dir="auto"></h3>
+    <a id="player-yt" href="https://www.youtube.com" target="_blank" rel="noopener">לצפייה ביוטיוב</a>
+    <button class="player-close" id="player-close" aria-label="סגירה">×</button>
+  </div>
+</dialog>
+
+<script src="assets/config.js"></script>
+<script src="assets/common.js"></script>
+<script src="assets/site.js"></script>
+</body>
+</html>

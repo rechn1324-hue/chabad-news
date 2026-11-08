@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>החידון הגדול · איזור הילדים</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .qbox { max-width: 680px; margin: 0 auto; }
+  .qcard { background: #fff; border-radius: 26px; box-shadow: var(--lift); padding: 26px; }
+  .progress { height: 12px; background: var(--sky-2); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .progress span { display: block; height: 100%; background: var(--grass); border-radius: 999px; transition: width .3s; }
+  .qnum { color: var(--ink-2); font-weight: 600; margin: 0 0 6px; }
+  .qtext { font-family: var(--font-fun); font-weight: 600; font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem); line-height: 1.25; margin: 0 0 18px; }
+  .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  @media (max-width: 520px) { .opts { grid-template-columns: minmax(0, 1fr); } }
+  .opt { border: 3px solid var(--line); background: #fff; border-radius: 18px; padding: 14px 16px; font-size: 1.12rem; font-weight: 600; cursor: pointer; text-align: start; line-height: 1.3; box-shadow: var(--press); }
+  .opt:hover:not([disabled]) { border-color: var(--ocean); }
+  .opt.right { border-color: var(--good); background: #e5f8ec; }
+  .opt.wrong { border-color: var(--bad); background: #fdeaea; }
+  .opt[disabled] { cursor: default; }
+  .explain { margin-top: 16px; padding: 14px 16px; border-radius: 16px; background: var(--sky); font-size: 1.05rem; }
+  .explain b { font-family: var(--font-fun); font-size: 1.2rem; }
+  .next-row { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .levels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
+  @media (max-width: 520px) { .levels { grid-template-columns: minmax(0, 1fr); } }
+  .level { border: 0; border-radius: 22px; padding: 20px; cursor: pointer; text-align: start; box-shadow: var(--press); color: #fff; }
+  .level b { font-family: var(--font-fun); font-size: 1.6rem; display: block; }
+  .level.small { background: var(--ocean); }
+  .level.big { background: var(--grape); }
+  .result { text-align: center; }
+  .result h2 { font-family: var(--font-fun); font-size: 2.2rem; margin: 0 0 6px; }
+  .result .score { font-family: var(--font-fun); font-weight: 700; font-size: 3.4rem; color: var(--tomato); }
+</style>
+</head>
+<body>
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>החידון הגדול</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="qbox" id="app"></div>
+</main>
+
+<script src="kids.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+  // בכל שאלה התשובה הנכונה היא הראשונה ברשימה (הסדר מעורבב במשחק)
+  var BANK = {
+    small: [
+      ['כמה ימים חוגגים את חנוכה?', ['8', '7', '3', '10'], 'בחנוכה מדליקים נרות שמונה ימים, לזכר נס פך השמן.'],
+      ['מה אוכלים בפסח במקום לחם?', ['מצה', 'חלה', 'פיתה', 'עוגה'], 'בפסח אוכלים מצה, זכר ליציאת מצרים.'],
+      ['באיזה חג יושבים בסוכה?', ['סוכות', 'פורים', 'שבועות', 'חנוכה'], 'בחג הסוכות אוכלים ויושבים בסוכה שבעה ימים.'],
+      ['במה תוקעים בראש השנה?', ['בשופר', 'בחצוצרה', 'בפעמון', 'בחליל'], 'בראש השנה שומעים קול שופר.'],
+      ['באיזה חג קוראים את מגילת אסתר?', ['פורים', 'פסח', 'חנוכה', 'ל״ג בעומר'], 'בפורים קוראים את המגילה בלילה וביום.'],
+      ['במה טובלים את התפוח בראש השנה?', ['בדבש', 'במלח', 'בשוקולד', 'בריבה'], 'מבקשים שתהיה לנו שנה טובה ומתוקה.'],
+      ['מה כתוב על הסביבון בארץ ישראל?', ['נ ג ה פ', 'א ב ג ד', 'נ ג ה ש', 'ש ב ת'], 'נס גדול היה פה! ובחוץ לארץ כתוב נ ג ה ש – נס גדול היה שם.'],
+      ['מה שמים בקופת הצדקה?', ['מטבעות', 'אבנים', 'ממתקים', 'צעצועים'], 'כסף שנותנים בקופת צדקה עוזר לאנשים שצריכים.'],
+      ['מה קיבל עם ישראל בהר סיני?', ['את התורה', 'את הסידור', 'את ההגדה', 'את המגילה'], 'בחג השבועות חוגגים את מתן תורה בהר סיני.'],
+      ['מה מדליקים בל״ג בעומר?', ['מדורה', 'נרות חנוכה', 'זיקוקים', 'פנס'], 'בל״ג בעומר מדליקים מדורות לכבוד רבי שמעון בר יוחאי.'],
+      ['מה כתוב בקלף שבתוך המזוזה?', ['שמע ישראל', 'מודה אני', 'ברכת המזון', 'מה נשתנה'], 'בקלף של המזוזה כתובות הפרשיות "שמע ישראל" ו"והיה אם שמוע".'],
+      ['מה אומרים מיד כשמתעוררים בבוקר?', ['מודה אני', 'שמע ישראל', 'ברכת המזון', 'הבדלה'], 'מודים לה׳ שהחזיר לנו את הנשמה.'],
+      ['מה מניחים על היד ועל הראש?', ['תפילין', 'טלית', 'כיפה', 'ציצית'], 'בחב״ד ילד מתחיל להניח תפילין כחודשיים לפני בר המצווה.'],
+      ['איזה פרי הוא אחד מארבעת המינים?', ['אתרוג', 'תפוח', 'בננה', 'אבטיח'], 'ארבעת המינים: לולב, אתרוג, הדסים וערבות.'],
+      ['מה שולחים לחברים בפורים?', ['משלוח מנות', 'מכתב', 'פרחים', 'צעצוע'], 'משלוח מנות הוא אחת מארבע המצוות של פורים.'],
+      ['מה עושים לפני שאוכלים?', ['מברכים', 'ישנים', 'רצים', 'שוכחים'], 'בברכה מודים לה׳ על האוכל.'],
+      ['באיזה חג מתחילים לקרוא את התורה מההתחלה?', ['שמחת תורה', 'פורים', 'חנוכה', 'ט״ו בשבט'], 'בשמחת תורה מסיימים את התורה ומתחילים שוב מבראשית, ורוקדים עם ספרי התורה.'],
+      ['ט״ו בשבט הוא ראש השנה ל...?', ['אילנות (עצים)', 'ילדים', 'פרחים', 'ציפורים'], 'בט״ו בשבט נוהגים לאכול פירות, במיוחד משבעת המינים.'],
+      ['איך קוראים לרכב שנוסע ברחוב ועוזר ליהודים לקיים מצוות?', ['טנק מבצעים', 'טנק צבא', 'אוטובוס', 'משאית זבל'], 'בטנק המבצעים מניחים תפילין, מקבלים נרות שבת ועוד.'],
+      ['מה נוהגים לאכול בחג השבועות?', ['מאכלי חלב', 'מצה', 'סופגניות', 'אוזני המן'], 'בשבועות אוכלים מאכלי חלב כמו עוגת גבינה.'],
+      ['כמה נרות מדליקים בלילה האחרון של חנוכה (בלי השמש)?', ['8', '1', '4', '10'], 'בכל לילה מוסיפים נר, ובלילה השמיני מדליקים שמונה נרות.'],
+      ['מה עושים בשבת לפני הסעודה?', ['קידוש', 'הבדלה', 'תקיעת שופר', 'ספירת העומר'], 'בליל שבת ובבוקר עושים קידוש על כוס יין או מיץ ענבים.'],
+    ],
+    big: [
+      ['מה ראשי התיבות של חב״ד?', ['חכמה, בינה, דעת', 'חסד, בינה, דעת', 'חכמה, ברכה, דעת', 'חסד, ברכה, דין'], 'שלוש הספירות של השכל – חכמה, בינה ודעת.'],
+      ['מי היה האדמו״ר הראשון של חב״ד?', ['רבי שניאור זלמן מליאדי', 'הבעל שם טוב', 'המגיד ממזריטש', 'רבי לוי יצחק מברדיצ׳ב'], 'אדמו״ר הזקן היה תלמידו של המגיד ממזריטש, תלמיד הבעל שם טוב.'],
+      ['איך נקרא הספר שכתב אדמו״ר הזקן ובו יסודות חסידות חב״ד?', ['תניא', 'זוהר', 'משנה תורה', 'מסילת ישרים'], 'שמו המלא: ליקוטי אמרים – תניא.'],
+      ['איזה יום נקרא "ראש השנה לחסידות"?', ['י״ט כסלו', 'י׳ שבט', 'י״ב תמוז', 'ל״ג בעומר'], 'בי״ט כסלו תקנ״ט (1798) יצא אדמו״ר הזקן לחופשי מהכלא בפטרבורג.'],
+      ['מה המספר של הבניין המפורסם של חב״ד בברוקלין?', ['770', '613', '248', '365'], 'בית חיינו נמצא ב-770 איסטרן פארקווי.'],
+      ['כמה אדמו״רים היו בשושלת חב״ד?', ['7', '5', '10', '3'], 'אדמו״ר הזקן, האמצעי, הצמח צדק, המהר״ש, הרש״ב, הריי״צ והרבי.'],
+      ['כמה מצוות יש בתורה?', ['613', '248', '365', '770'], '248 מצוות עשה ו-365 מצוות לא תעשה.'],
+      ['על שם איזו עיירה נקראת חסידות ליובאוויטש?', ['ליובאוויטש', 'ליאדי', 'ברדיצ׳ב', 'מזריטש'], 'האדמו״רים ישבו בליובאוויטש כמאה שנה.'],
+      ['ממה מורכב שיעור החת״ת היומי?', ['חומש, תהילים, תניא', 'חומש, תלמוד, תפילה', 'חסידות, תורה, תהילים', 'חומש, תפילין, תניא'], 'זו תקנה של הרבי הריי״צ – ללמוד כל יום חלק מחומש, תהילים ותניא.'],
+      ['באיזה תאריך נולד הרבי?', ['י״א ניסן', 'י״ט כסלו', 'כ׳ מר-חשון', 'י״ב תמוז'], 'הרבי נולד בי״א ניסן תרס״ב (1902) בעיר ניקולאייב.'],
+      ['באיזה יום קיבל הרבי את הנשיאות?', ['י׳ שבט תשי״א', 'י״ט כסלו תקנ״ט', 'י״ב תמוז תרפ״ז', 'י״א ניסן תרס״ב'], 'בי׳ שבט תשי״א (1951) אמר הרבי את המאמר "באתי לגני".'],
+      ['מה חוגגים בי״ב–י״ג תמוז?', ['את חג הגאולה של הרבי הריי״צ', 'את ראש השנה לחסידות', 'את יום ההולדת של הרבי', 'את חנוכת 770'], 'בשנת תרפ״ז (1927) שוחרר הרבי הריי״צ ממאסר בברית המועצות.'],
+      ['איזה מאלה הוא אחד ממבצעי המצוות של הרבי?', ['מבצע תפילין', 'מבצע קניות', 'מבצע ספורט', 'מבצע חופש'], 'יש עשרה מבצעים, ביניהם תפילין, מזוזה, צדקה, נרות שבת וכשרות.'],
+      ['מתי יצאו טנקי המבצעים הראשונים לרחובות?', ['תשל״ד (1974)', 'תש״ח (1948)', 'תשמ״ח (1988)', 'תש״ס (2000)'], 'טנקי המבצעים יצאו לראשונה ברחובות ניו יורק.'],
+      ['מה מטרת ארגון "צבאות ה׳" שייסד הרבי?', ['לעודד ילדים ללמוד תורה ולקיים מצוות', 'לאמן חיילים', 'לארגן ליגת כדורגל', 'להקים מקהלה'], 'הארגון נוסד בשנת תש״מ (1980), וכל ילד יכול להצטרף.'],
+      ['מה הפסוק הראשון ב-12 הפסוקים?', ['תורה ציווה לנו משה', 'שמע ישראל', 'בראשית ברא', 'מודה אני'], 'הרבי ביקש שכל ילד יידע את 12 הפסוקים בעל פה.'],
+      ['היכן נמצא כפר חב״ד?', ['בארץ ישראל', 'בניו יורק', 'ברוסיה', 'בצרפת'], 'כפר חב״ד הוקם בשנת תש״ט (1949), ליד לוד.'],
+      ['מי הוא "שליח" בחב״ד?', ['מי שיוצא בשליחות הרבי לקרב יהודים', 'דוור', 'נהג מונית', 'חזן בבית הכנסת'], 'יש שלוחים ביותר מ-100 מדינות בעולם.'],
+      ['באיזו עיר ישב אדמו״ר הזקן בכלא לפני י״ט כסלו?', ['פטרבורג', 'מוסקבה', 'ליובאוויטש', 'וילנה'], 'הוא נכלא במבצר פטרופבלובסק בפטרבורג.'],
+      ['מי היה האדמו״ר השני של חב״ד?', ['רבי דובער – אדמו״ר האמצעי', 'רבי שמואל', 'רבי יוסף יצחק', 'רבי שלום דובער'], 'אדמו״ר האמצעי היה בנו של אדמו״ר הזקן.'],
+      ['מהו "כינוס השלוחים"?', ['כנס שנתי של שלוחי חב״ד מכל העולם', 'טיול שנתי', 'חתונה גדולה', 'תחרות ריצה'], 'בסוף הכינוס מצטלמים כל השלוחים יחד מול 770.'],
+      ['באיזו שנה הגיע הרבי הריי״צ לארצות הברית?', ['ת״ש (1940)', 'תרפ״ז (1927)', 'תשי״א (1951)', 'תש״ט (1949)'], 'הוא הגיע לניו יורק והקים שם את מרכז חב״ד.'],
+      ['למה נתן הרבי דולר לכל אחד בימי ראשון?', ['כדי שייתנו אותו לצדקה', 'כמתנת יום הולדת', 'כדי לקנות ממתקים', 'כמזכרת בלבד'], 'כך כל מפגש עם הרבי הוביל למצווה של צדקה.'],
+    ],
+  };
+  var ROUND = 10;
+  var app = document.getElementById('app');
+  var st = null;
+
+  function menu() {
+    var best = K.load('quiz-best', {});
+    app.innerHTML = '<div class="qcard"><h2 class="qtext" style="margin-bottom:6px">בחרו חידון</h2>' +
+      '<p style="margin:0;color:var(--ink-2)">10 שאלות בכל סיבוב. אחרי כל תשובה תלמדו משהו חדש.</p>' +
+      '<div class="levels"><button class="level small" data-level="small" type="button"><b>לקטנים</b>חגים, מצוות ושבת' + (best.small != null ? '<br>השיא שלכם: ' + best.small + '/10' : '') + '</button>' +
+      '<button class="level big" data-level="big" type="button"><b>לגדולים</b>חסידות חב״ד, הרבי והיסטוריה' + (best.big != null ? '<br>השיא שלכם: ' + best.big + '/10' : '') + '</button></div></div>';
+  }
+
+  function startLevel(level) {
+    K.audio();
+    var qs = K.shuffle(BANK[level]).slice(0, ROUND).map(function (q) {
+      return { q: q[0], right: q[1][0], opts: K.shuffle(q[1]), ex: q[2] };
+    });
+    st = { level: level, qs: qs, i: 0, score: 0 };
+    show();
+  }
+
+  function show() {
+    var q = st.qs[st.i];
+    app.innerHTML = '<div class="qcard"><div class="progress"><span style="width:' + (st.i / ROUND * 100) + '%"></span></div>' +
+      '<p class="qnum">שאלה ' + (st.i + 1) + ' מתוך ' + ROUND + ' · ⭐ ' + st.score + '</p>' +
+      '<h2 class="qtext">' + q.q + '</h2><div class="opts">' +
+      q.opts.map(function (o, k) { return '<button class="opt" type="button" data-k="' + k + '">' + o + '</button>'; }).join('') +
+      '</div><div id="after"></div></div>';
+  }
+
+  function answer(k) {
+    var q = st.qs[st.i];
+    var buttons = app.querySelectorAll('.opt');
+    var ok = q.opts[k] === q.right;
+    buttons.forEach(function (b, j) {
+      b.disabled = true;
+      if (q.opts[j] === q.right) b.classList.add('right');
+      else if (j === k) b.classList.add('wrong');
+    });
+    if (ok) { st.score++; K.sfx.good(); } else K.sfx.bad();
+    var last = st.i === ROUND - 1;
+    document.getElementById('after').innerHTML = '<div class="explain"><b>' + (ok ? 'נכון! ' : 'כמעט! ') + '</b>' + q.ex + '</div>' +
+      '<div class="next-row"><button class="kbtn green" id="next" type="button">' + (last ? 'לתוצאות' : 'לשאלה הבאה ←') + '</button></div>';
+    document.getElementById('next').focus();
+  }
+
+  function result() {
+    var best = K.load('quiz-best', {});
+    if (best[st.level] == null || st.score > best[st.level]) { best[st.level] = st.score; K.save('quiz-best', best); }
+    var stars = st.score >= 9 ? 3 : st.score >= 6 ? 2 : 1;
+    var msg = st.score === 10 ? 'מושלם! אתם אלופי החידון!' : st.score >= 7 ? 'יישר כוח! ידע מרשים!' : st.score >= 4 ? 'יפה מאוד! עוד סיבוב ותהיו מומחים.' : 'כל הכבוד על הניסיון! עכשיו אתם כבר יודעים יותר.';
+    app.innerHTML = '<div class="qcard result"><h2>' + msg + '</h2><div class="score">' + st.score + '/10</div><div class="stars">' + '⭐'.repeat(stars) + '</div>' +
+      '<div class="choice-row" style="margin-top:14px"><button class="kbtn green" data-level="' + st.level + '" type="button">עוד סיבוב</button>' +
+      '<button class="kbtn white" id="to-menu" type="button">בחירת חידון</button></div></div>';
+    if (st.score >= 7) { K.sfx.win(); K.confetti(); }
+  }
+
+  app.addEventListener('click', function (e) {
+    var t = e.target.closest('[data-level],.opt,#next,#to-menu');
+    if (!t) return;
+    if (t.dataset.level) startLevel(t.dataset.level);
+    else if (t.classList.contains('opt')) answer(+t.dataset.k);
+    else if (t.id === 'next') { st.i++; if (st.i >= ROUND) result(); else show(); }
+    else if (t.id === 'to-menu') menu();
+  });
+  menu();
+})();
+</script>
+</body>
+</html>

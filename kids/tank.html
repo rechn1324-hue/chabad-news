@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>טנק המבצעים · איזור הילדים</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .stage { position: relative; width: min(100%, 480px); margin: 0 auto; height: min(72vh, 680px); min-height: 420px; border-radius: 24px; overflow: hidden; box-shadow: var(--lift); background: #8fd16a; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .stage canvas { display: block; width: 100%; height: 100%; }
+  .pad { direction: ltr; display: flex; justify-content: center; gap: 18px; margin-top: 16px; }
+  .pad .kbtn { width: 110px; height: 70px; font-size: 2rem; padding: 0; }
+  .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin: 4px 0 6px; font-size: .98rem; }
+  .legend span { white-space: nowrap; }
+  .best { color: var(--ink-2); font-weight: 600; }
+</style>
+</head>
+<body>
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>טנק המבצעים</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="hud">
+    <span class="chip">מצוות: <b id="score">0</b></span>
+    <span class="chip">שלב <b id="level">1</b></span>
+    <span class="chip" id="lives" aria-label="חיים">❤️❤️❤️</span>
+  </div>
+
+  <div class="stage" id="stage">
+    <canvas id="cv" aria-label="משחק טנק המבצעים"></canvas>
+    <div class="overlay" id="ov-start">
+      <h2>יוצאים למבצעים!</h2>
+      <p>נוהגים בטנק המבצעים ברחוב: אוספים כמה שיותר מצוות, ונזהרים מקונוסים, ממחסומים ומשלוליות.</p>
+      <div class="legend"><span>✔ נרות שבת</span><span>✔ תפילין</span><span>✔ צדקה</span><span>✔ מזוזה</span><span>✔ סידור</span></div>
+      <p>במחשב: חיצים ימינה ושמאלה. בטלפון: נוגעים בצד שאליו רוצים לנסוע.</p>
+      <button class="kbtn blue" id="start" type="button">יוצאים לדרך!</button>
+      <p class="best" id="best-start"></p>
+    </div>
+    <div class="overlay" id="ov-over" hidden>
+      <h2 id="over-title">כל הכבוד!</h2>
+      <p id="over-text"></p>
+      <div class="stars" id="over-stars"></div>
+      <button class="kbtn blue" id="again" type="button">עוד סיבוב</button>
+      <p class="best" id="best-over"></p>
+    </div>
+    <div class="overlay" id="ov-pause" hidden>
+      <h2>הפסקה קטנה</h2>
+      <button class="kbtn blue" id="resume" type="button">ממשיכים</button>
+    </div>
+  </div>
+
+  <div class="pad" aria-label="שליטה">
+    <button class="kbtn white" id="btn-left" type="button" aria-label="שמאלה">◀</button>
+    <button class="kbtn white" id="btn-right" type="button" aria-label="ימינה">▶</button>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+  var stage = document.getElementById('stage');
+  var cv = document.getElementById('cv');
+  var g = cv.getContext('2d');
+  var $ = function (id) { return document.getElementById(id); };
+
+  var LANES = 3;
+  var GOOD = [
+    { k: 'candles', n: 'נרות שבת' },
+    { k: 'tefillin', n: 'תפילין' },
+    { k: 'tzedaka', n: 'צדקה' },
+    { k: 'mezuza', n: 'מזוזה' },
+    { k: 'siddur', n: 'סידור' },
+  ];
+  var BAD = ['cone', 'barrier', 'puddle'];
+  var CHEERS = ['כל הכבוד!', 'יישר כוח!', 'אלופים!', 'מצוין!'];
+
+  var W = 0, H = 0, dpr = 1, roadX = 0, roadW = 0, laneW = 0;
+  var s = null;           // מצב המשחק
+  var raf = 0, last = 0;
+  var best = K.load('tank-best', 0);
+
+  function resize() {
+    var r = stage.getBoundingClientRect();
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    W = r.width; H = r.height;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    g.setTransform(dpr, 0, 0, dpr, 0, 0);
+    roadW = Math.min(W * 0.8, 400);
+    roadX = (W - roadW) / 2;
+    laneW = roadW / LANES;
+    if (s) s.px = laneX(s.lane);
+    if (!s || !s.running) draw(0);
+  }
+  function laneX(l) { return roadX + laneW * (l + 0.5); }
+
+  function newGame() {
+    s = { running: true, score: 0, lives: 3, level: 1, lane: 1, px: laneX(1), ents: [], floats: [], spawn: 0.6, scroll: 0, inv: 0, shake: 0, t: 0 };
+    updateHud();
+  }
+  function speed() { return H * (0.42 + (s.level - 1) * 0.055); }
+  function spawnEvery() { return Math.max(0.4, 0.95 - (s.level - 1) * 0.07); }
+
+  function spawn() {
+    var lane = Math.floor(Math.random() * LANES);
+    var good = Math.random() < 0.6;
+    s.ents.push(makeEnt(lane, good));
+    if (s.level >= 3 && Math.random() < 0.28) {
+      var other = (lane + 1 + Math.floor(Math.random() * (LANES - 1))) % LANES;
+      s.ents.push(makeEnt(other, Math.random() < 0.5));
+    }
+  }
+  function makeEnt(lane, good) {
+    return { lane: lane, y: -laneW, good: good, k: good ? K.pick(GOOD) : { k: K.pick(BAD) }, wob: Math.random() * 6 };
+  }
+
+  function move(dir) {
+    if (!s || !s.running) return;
+    var nl = Math.max(0, Math.min(LANES - 1, s.lane + dir));
+    if (nl !== s.lane) { s.lane = nl; K.sfx.tick(); }
+  }
+
+  function updateHud() {
+    $('score').textContent = s.score;
+    $('level').textContent = s.level;
+    $('lives').textContent = s.lives > 0 ? '❤️'.repeat(s.lives) + '🤍'.repeat(3 - s.lives) : '🤍🤍🤍';
+  }
+
+  function float(text, x, y, color, big) { s.floats.push({ text: text, x: x, y: y, c: color, t: 0, big: !!big }); }
+
+  function step(dt) {
+    s.t += dt;
+    var v = speed();
+    s.scroll = (s.scroll + v * dt) % 10000;
+    s.px += (laneX(s.lane) - s.px) * Math.min(1, dt * 14);
+    if (s.inv > 0) s.inv -= dt;
+    if (s.shake > 0) s.shake -= dt;
+    s.spawn -= dt;
+    if (s.spawn <= 0) { spawn(); s.spawn = spawnEvery() * (0.8 + Math.random() * 0.5); }
+
+    var tw = laneW * 0.6, th = laneW * 1.05, ty = H - th * 0.75;
+    for (var i = s.ents.length - 1; i >= 0; i--) {
+      var e = s.ents[i];
+      e.y += v * dt;
+      var ex = laneX(e.lane);
+      var size = laneW * 0.5;
+      if (!e.done && Math.abs(ex - s.px) < laneW * 0.45 && Math.abs(e.y - ty) < (th / 2 + size / 2) * 0.82) {
+        e.done = true;
+        if (e.good) {
+          s.score++;
+          K.sfx.good();
+          float('+1 ' + e.k.n, ex, e.y, '#1f9d55');
+          var lvl = 1 + Math.floor(s.score / 10);
+          if (lvl > s.level) { s.level = lvl; K.sfx.win(); float('שלב ' + lvl + '!', W / 2, H * 0.4, '#2f80ff', true); }
+          s.ents.splice(i, 1);
+        } else if (s.inv <= 0) {
+          s.lives--;
+          s.inv = 1.3; s.shake = 0.3;
+          K.sfx.bad();
+          float('אוי!', ex, e.y, '#e5484d');
+          if (s.lives <= 0) { updateHud(); return gameOver(); }
+        }
+        updateHud();
+        continue;
+      }
+      if (e.y > H + laneW) s.ents.splice(i, 1);
+    }
+    for (var j = s.floats.length - 1; j >= 0; j--) {
+      var f = s.floats[j];
+      f.t += dt; f.y -= dt * 60;
+      if (f.t > 1.1) s.floats.splice(j, 1);
+    }
+  }
+
+  // ------------------------------------------------------------ drawing
+  function rr(x, y, w, h, r) {
+    g.beginPath();
+    g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r);
+    g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+  }
+  function font(px, w) { g.font = (w || 600) + ' ' + Math.round(px) + 'px Fredoka, Rubik, Arial, sans-serif'; }
+
+  function drawWorld(scroll) {
+    g.fillStyle = '#8fd16a'; g.fillRect(0, 0, W, H);
+    // עצים ובתים בצדי הדרך
+    var gap = 140, off = scroll % gap;
+    for (var y = -gap + off; y < H + gap; y += gap) {
+      var idx = Math.floor((y - off + scroll) / gap);
+      [roadX / 2, W - roadX / 2].forEach(function (x, side) {
+        if (roadX < 26) return;
+        if ((idx + side) % 3 === 0) {
+          g.fillStyle = '#f4d8a8'; rr(x - 18, y - 16, 36, 30, 4); g.fill();
+          g.fillStyle = '#c9573f'; g.beginPath(); g.moveTo(x - 22, y - 14); g.lineTo(x, y - 32); g.lineTo(x + 22, y - 14); g.closePath(); g.fill();
+          g.fillStyle = '#7fc4ff'; g.fillRect(x - 10, y - 8, 8, 8); g.fillRect(x + 3, y - 8, 8, 8);
+        } else {
+          g.fillStyle = '#5aa845'; g.beginPath(); g.arc(x, y, 16, 0, Math.PI * 2); g.fill();
+          g.fillStyle = '#4b9139'; g.beginPath(); g.arc(x + 6, y + 4, 9, 0, Math.PI * 2); g.fill();
+        }
+      });
+    }
+    // כביש
+    g.fillStyle = '#5b6274'; g.fillRect(roadX, 0, roadW, H);
+    g.fillStyle = '#ffffff'; g.fillRect(roadX + 4, 0, 4, H); g.fillRect(roadX + roadW - 8, 0, 4, H);
+    g.fillStyle = 'rgba(255,255,255,.75)';
+    var dash = 46, doff = scroll % (dash * 2);
+    for (var l = 1; l < LANES; l++) {
+      var lx = roadX + laneW * l - 2;
+      for (var yy = -dash * 2 + doff; yy < H; yy += dash * 2) g.fillRect(lx, yy, 4, dash);
+    }
+  }
+
+  function drawTank(x, y, w, h) {
+    // גלגלים
+    g.fillStyle = '#1a2350';
+    [[-1, -0.3], [1, -0.3], [-1, 0.32], [1, 0.32]].forEach(function (p) { rr(x + p[0] * w * 0.5 - w * 0.09, y + p[1] * h - h * 0.08, w * 0.18, h * 0.16, 4); g.fill(); });
+    // גוף
+    g.fillStyle = '#ffffff'; g.strokeStyle = '#1a2350'; g.lineWidth = 3;
+    rr(x - w / 2, y - h / 2, w, h, w * 0.18); g.fill(); g.stroke();
+    g.fillStyle = '#2f80ff'; g.fillRect(x - w / 2 + 2, y + h * 0.22, w - 4, h * 0.07);
+    // שמשה קדמית
+    g.fillStyle = '#9fd3ff'; rr(x - w * 0.36, y - h / 2 + h * 0.06, w * 0.72, h * 0.15, 6); g.fill();
+    // שלט על הגג
+    g.fillStyle = '#1a2350'; rr(x - w * 0.42, y - h * 0.16, w * 0.84, h * 0.3, 5); g.fill();
+    g.fillStyle = '#ffd23f'; g.textAlign = 'center'; g.textBaseline = 'middle'; font(w * 0.19, 700);
+    g.fillText('מבצעים', x, y - h * 0.01);
+    // רמקולים
+    g.fillStyle = '#c0c7dd'; g.beginPath(); g.arc(x - w * 0.25, y - h * 0.26, w * 0.07, 0, Math.PI * 2); g.arc(x + w * 0.25, y - h * 0.26, w * 0.07, 0, Math.PI * 2); g.fill();
+  }
+
+  function drawItem(k, x, y, s0) {
+    g.save(); g.translate(x, y);
+    g.lineWidth = 2.5; g.strokeStyle = '#1a2350'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    // הילה של "דבר טוב"
+    g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.arc(0, 0, s0 * 0.68, 0, Math.PI * 2); g.fill();
+    if (k === 'candles') {
+      g.fillStyle = '#c0c7dd'; rr(-s0 * 0.42, s0 * 0.2, s0 * 0.84, s0 * 0.16, 4); g.fill(); g.stroke();
+      [-0.2, 0.2].forEach(function (dx) {
+        g.fillStyle = '#ffffff'; rr(s0 * dx - s0 * 0.08, -s0 * 0.22, s0 * 0.16, s0 * 0.44, 3); g.fill(); g.stroke();
+        g.fillStyle = '#ff9f1c'; g.beginPath(); g.ellipse(s0 * dx, -s0 * 0.33, s0 * 0.07, s0 * 0.12, 0, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#ffd23f'; g.beginPath(); g.ellipse(s0 * dx, -s0 * 0.3, s0 * 0.035, s0 * 0.06, 0, 0, Math.PI * 2); g.fill();
+      });
+    } else if (k === 'tefillin') {
+      g.strokeStyle = '#111'; g.lineWidth = s0 * 0.07;
+      g.beginPath(); g.arc(0, s0 * 0.18, s0 * 0.34, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke();
+      g.fillStyle = '#111'; rr(-s0 * 0.25, -s0 * 0.3, s0 * 0.5, s0 * 0.46, 5); g.fill();
+      g.fillStyle = '#fff'; font(s0 * 0.34, 700); g.fillText('ש', 0, -s0 * 0.06);
+    } else if (k === 'tzedaka') {
+      g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(0, -s0 * 0.34, s0 * 0.14, 0, Math.PI * 2); g.fill(); g.stroke();
+      g.fillStyle = '#2f80ff'; rr(-s0 * 0.32, -s0 * 0.18, s0 * 0.64, s0 * 0.52, 6); g.fill(); g.stroke();
+      g.fillStyle = '#1a2350'; g.fillRect(-s0 * 0.14, -s0 * 0.14, s0 * 0.28, s0 * 0.05);
+      g.fillStyle = '#fff'; font(s0 * 0.17, 700); g.fillText('צדקה', 0, s0 * 0.1);
+    } else if (k === 'mezuza') {
+      g.rotate(-0.35);
+      g.fillStyle = '#b9c8e6'; rr(-s0 * 0.13, -s0 * 0.4, s0 * 0.26, s0 * 0.8, 8); g.fill(); g.stroke();
+      g.fillStyle = '#9a700c'; font(s0 * 0.26, 700); g.fillText('ש', 0, -s0 * 0.12);
+    } else if (k === 'siddur') {
+      g.fillStyle = '#1f3b8f'; rr(-s0 * 0.3, -s0 * 0.36, s0 * 0.6, s0 * 0.72, 4); g.fill(); g.stroke();
+      g.strokeStyle = '#ffd23f'; g.lineWidth = 2; rr(-s0 * 0.22, -s0 * 0.28, s0 * 0.44, s0 * 0.56, 3); g.stroke();
+      g.fillStyle = '#ffd23f'; font(s0 * 0.17, 700); g.fillText('סידור', 0, 0);
+    }
+    g.restore();
+  }
+
+  function drawBad(k, x, y, s0) {
+    g.save(); g.translate(x, y); g.lineWidth = 2.5; g.strokeStyle = '#1a2350';
+    if (k === 'cone') {
+      g.fillStyle = '#ff7a1a'; g.beginPath(); g.moveTo(0, -s0 * 0.45); g.lineTo(s0 * 0.3, s0 * 0.3); g.lineTo(-s0 * 0.3, s0 * 0.3); g.closePath(); g.fill(); g.stroke();
+      g.fillStyle = '#fff'; g.fillRect(-s0 * 0.16, -s0 * 0.08, s0 * 0.32, s0 * 0.09); g.fillRect(-s0 * 0.22, s0 * 0.1, s0 * 0.44, s0 * 0.08);
+      g.fillStyle = '#ff7a1a'; rr(-s0 * 0.4, s0 * 0.28, s0 * 0.8, s0 * 0.12, 3); g.fill(); g.stroke();
+    } else if (k === 'barrier') {
+      g.fillStyle = '#6b7280'; g.fillRect(-s0 * 0.4, -s0 * 0.05, s0 * 0.08, s0 * 0.4); g.fillRect(s0 * 0.32, -s0 * 0.05, s0 * 0.08, s0 * 0.4);
+      g.save(); rr(-s0 * 0.5, -s0 * 0.25, s0, s0 * 0.26, 4); g.fillStyle = '#fff'; g.fill(); g.clip();
+      g.fillStyle = '#e5484d';
+      for (var i = -3; i < 4; i++) { g.beginPath(); g.moveTo(i * s0 * 0.2, -s0 * 0.3); g.lineTo(i * s0 * 0.2 + s0 * 0.1, -s0 * 0.3); g.lineTo(i * s0 * 0.2 - s0 * 0.05, s0 * 0.05); g.lineTo(i * s0 * 0.2 - s0 * 0.15, s0 * 0.05); g.fill(); }
+      g.restore(); rr(-s0 * 0.5, -s0 * 0.25, s0, s0 * 0.26, 4); g.stroke();
+    } else {
+      g.fillStyle = '#3b6fd6'; g.beginPath(); g.ellipse(0, 0, s0 * 0.48, s0 * 0.3, 0, 0, Math.PI * 2); g.fill();
+      g.fillStyle = '#6fa0ff'; g.beginPath(); g.ellipse(-s0 * 0.12, -s0 * 0.06, s0 * 0.2, s0 * 0.09, 0, 0, Math.PI * 2); g.fill();
+    }
+    g.restore();
+  }
+
+  function draw(dt) {
+    var shake = s && s.shake > 0 ? (Math.random() - 0.5) * 8 : 0;
+    g.save(); g.translate(shake, 0);
+    drawWorld(s ? s.scroll : 0);
+    var size = laneW * 0.5;
+    if (s) {
+      s.ents.forEach(function (e) {
+        var bob = e.good ? Math.sin(s.t * 5 + e.wob) * 3 : 0;
+        if (e.good) drawItem(e.k.k, laneX(e.lane), e.y + bob, size); else drawBad(e.k.k, laneX(e.lane), e.y, size);
+      });
+    }
+    var tw = laneW * 0.6, th = laneW * 1.05;
+    var visible = !s || s.inv <= 0 || Math.floor(s.inv * 10) % 2 === 0;
+    if (visible) drawTank(s ? s.px : laneX(1), H - th * 0.75, tw, th);
+    if (s) {
+      s.floats.forEach(function (f) {
+        g.globalAlpha = Math.max(0, 1 - f.t / 1.1);
+        font(f.big ? 40 : 20, 700); g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.lineWidth = 5; g.strokeStyle = '#fff'; g.strokeText(f.text, f.x, f.y); g.fillStyle = f.c; g.fillText(f.text, f.x, f.y);
+        g.globalAlpha = 1;
+      });
+    }
+    g.restore();
+  }
+
+  function loop(now) {
+    var dt = Math.min(0.05, (now - last) / 1000 || 0);
+    last = now;
+    if (s && s.running) step(dt);
+    draw(dt);
+    if (s && s.running) raf = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    K.audio();
+    newGame();
+    $('ov-start').hidden = true; $('ov-over').hidden = true; $('ov-pause').hidden = true;
+    last = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+  }
+
+  function gameOver() {
+    s.running = false;
+    var record = s.score > best;
+    if (record) { best = s.score; K.save('tank-best', best); }
+    $('over-title').textContent = record && s.score > 0 ? 'שיא חדש!' : K.pick(CHEERS);
+    $('over-text').textContent = 'אספתם ' + s.score + ' מצוות והגעתם לשלב ' + s.level + '.';
+    $('over-stars').textContent = s.score >= 30 ? '⭐⭐⭐' : s.score >= 15 ? '⭐⭐' : '⭐';
+    $('best-over').textContent = 'השיא שלכם: ' + best;
+    $('ov-over').hidden = false;
+    if (record && s.score > 0) { K.sfx.win(); K.confetti(); }
+  }
+
+  function pause() {
+    if (!s || !s.running) return;
+    s.running = false; s.paused = true;
+    $('ov-pause').hidden = false;
+  }
+  function resume() {
+    if (!s || !s.paused) return;
+    s.paused = false; s.running = true;
+    $('ov-pause').hidden = true;
+    last = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+
+  // ------------------------------------------------------------ input
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ש') { move(-1); e.preventDefault(); }
+    else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'ג') { move(1); e.preventDefault(); }
+    else if (e.key === ' ' || e.key === 'Enter') {
+      if (!$('ov-start').hidden || !$('ov-over').hidden) { start(); e.preventDefault(); }
+      else if (s && s.paused) resume();
+    } else if (e.key === 'p' || e.key === 'Escape') { if (s && s.running) pause(); else resume(); }
+  });
+  cv.addEventListener('pointerdown', function (e) {
+    var r = cv.getBoundingClientRect();
+    move(e.clientX - r.left < r.width / 2 ? -1 : 1);
+  });
+  $('btn-left').addEventListener('click', function () { move(-1); });
+  $('btn-right').addEventListener('click', function () { move(1); });
+  $('start').addEventListener('click', start);
+  $('again').addEventListener('click', start);
+  $('resume').addEventListener('click', resume);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) pause(); });
+  window.addEventListener('resize', resize);
+
+  $('best-start').textContent = best ? 'השיא שלכם: ' + best : '';
+  resize();
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!s || !s.running) draw(0); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>כתבה · חב״ד בזמן אמת</title>
+<meta name="theme-color" content="#12204a">
+<link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;500;600;700;800&family=Frank+Ruhl+Libre:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+<header class="masthead">
+  <div class="wrap mast-row">
+    <a class="brand" href="./" aria-label="לעמוד הראשי">
+      <svg class="logo" viewBox="0 0 64 48" aria-hidden="true">
+        <path class="facade" d="M3 46V23l8.5-12L20 23v-4L32 3l12 16v4l8.5-12L61 23v23z"/>
+        <g class="win">
+          <rect x="7" y="27" width="3" height="5" rx="1"/><rect x="13" y="27" width="3" height="5" rx="1"/>
+          <rect x="7" y="36" width="3" height="5" rx="1"/><rect x="13" y="36" width="3" height="5" rx="1"/>
+          <rect x="48" y="27" width="3" height="5" rx="1"/><rect x="54" y="27" width="3" height="5" rx="1"/>
+          <rect x="48" y="36" width="3" height="5" rx="1"/><rect x="54" y="36" width="3" height="5" rx="1"/>
+          <rect x="24" y="22" width="4" height="6" rx="1"/><rect x="36" y="22" width="4" height="6" rx="1"/>
+          <path d="M28.5 46v-8a3.5 3.5 0 0 1 7 0v8z"/><circle cx="32" cy="13" r="2"/>
+        </g>
+      </svg>
+      <span><strong class="brand-name" id="site-name">חב״ד בזמן אמת</strong></span>
+    </a>
+    <nav class="mast-nav" aria-label="ניווט"><a class="kids-link" href="kids/">איזור הילדים</a></nav>
+  </div>
+</header>
+
+<main class="wrap">
+  <article class="article" id="article">
+    <a class="back" href="./">→ לכל החדשות</a>
+    <span class="skel" style="height:44px;margin-top:10px"></span>
+    <span class="skel" style="height:44px;margin-top:10px;width:70%"></span>
+    <span class="skel" style="height:18px;margin-top:24px"></span>
+    <span class="skel" style="height:18px;margin-top:10px"></span>
+  </article>
+</main>
+
+<script src="assets/config.js"></script>
+<script src="assets/common.js"></script>
+<script>
+(function () {
+  'use strict';
+  var S = window.Site, esc = S.esc;
+  var box = document.getElementById('article');
+
+  function bodyHTML(text) {
+    return String(text || '').split(/\n{2,}/).map(function (block) {
+      block = block.trim();
+      if (!block) return '';
+      if (/^##\s+/.test(block)) return '<h2>' + esc(block.replace(/^##\s+/, '')) + '</h2>';
+      return '<p>' + S.linkify(esc(block)).replace(/\n/g, '<br>') + '</p>';
+    }).join('');
+  }
+
+  function render(content) {
+    var c = S.normContent(content);
+    var name = c.settings.siteName || 'חב״ד בזמן אמת';
+    document.getElementById('site-name').textContent = name;
+    var id = decodeURIComponent(location.hash.slice(1));
+    var p = (c.posts || []).filter(function (x) { return x && x.id === id; })[0];
+    if (!p) {
+      box.innerHTML = '<a class="back" href="./">→ לכל החדשות</a><div class="empty">הכתבה לא נמצאה. ייתכן שהיא הוסרה מהאתר.</div>';
+      document.title = 'הכתבה לא נמצאה · ' + name;
+      return;
+    }
+    document.title = p.title + ' · ' + name;
+    var v = S.ytId(p.video);
+    var img = S.asset(p.image);
+    var others = (c.posts || []).filter(function (x) { return x && x.id !== p.id && x.title; })
+      .sort(function (a, b) { return (b.date || 0) - (a.date || 0); }).slice(0, 4);
+    box.innerHTML =
+      '<a class="back" href="./">→ לכל החדשות</a>' +
+      '<div class="meta"><span class="src" data-c="own">' + esc(name) + '</span><time>' + (p.date ? S.when(p.date) : '') + '</time></div>' +
+      '<h1 dir="auto">' + esc(p.title) + '</h1>' +
+      (p.summary ? '<p class="summary" dir="auto">' + esc(p.summary) + '</p>' : '') +
+      (v ? '<div class="video-embed"><iframe src="https://www.youtube-nocookie.com/embed/' + esc(v) + '?rel=0" title="' + esc(p.title) + '" allow="encrypted-media; picture-in-picture; fullscreen" allowfullscreen></iframe></div>' : '') +
+      (img && !v ? '<figure><img src="' + esc(img) + '" alt=""></figure>' : '') +
+      '<div class="body" dir="auto">' + bodyHTML(p.body) + '</div>' +
+      (S.safeUrl(p.link) ? '<p><a class="btn" href="' + esc(S.safeUrl(p.link)) + '" target="_blank" rel="noopener">לקריאה נוספת במקור ←</a></p>' : '') +
+      '<div class="share">' +
+        '<a class="btn primary" id="wa" target="_blank" rel="noopener">שיתוף בוואטסאפ</a>' +
+        '<button class="btn" id="copy" type="button">העתקת קישור</button>' +
+      '</div>' +
+      (others.length ? '<section class="sec" style="margin-top:34px"><div class="sec-head"><h2>עוד מהמערכת</h2></div><div class="stories">' +
+        others.map(function (o) {
+          return '<article class="story"><a class="story-a" href="post.html#' + encodeURIComponent(o.id) + '"><div class="story-body"><div class="meta"><time>' +
+            (o.date ? S.ago(o.date) : '') + '</time></div><h3 dir="auto">' + esc(o.title) + '</h3></div></a></article>';
+        }).join('') + '</div></section>' : '');
+    document.getElementById('wa').href = 'https://wa.me/?text=' + encodeURIComponent(p.title + '\n' + location.href);
+    document.getElementById('copy').addEventListener('click', function (e) {
+      var btn = e.currentTarget;
+      var done = function () { btn.textContent = 'הקישור הועתק'; setTimeout(function () { btn.textContent = 'העתקת קישור'; }, 2000); };
+      if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, function () { prompt('העתיקו את הקישור:', location.href); });
+      else prompt('העתיקו את הקישור:', location.href);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  function load() {
+    S.getJSON('data/content.json').then(render, function () {
+      box.innerHTML = '<a class="back" href="./">→ לכל החדשות</a><div class="empty">לא הצלחנו לטעון את הכתבה. נסו לרענן את העמוד.</div>';
+    });
+  }
+  window.addEventListener('hashchange', load);
+  load();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>בלוני האותיות · איזור הילדים</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .modes { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+  .modes .kbtn[aria-pressed="true"] { background: var(--tomato); color: #fff; }
+  .target { display: flex; align-items: center; justify-content: center; gap: 16px; background: #fff; border-radius: 22px; padding: 10px 22px; box-shadow: var(--press); max-width: 520px; margin: 0 auto 14px; }
+  .target .big { font-family: var(--font-fun); font-weight: 700; font-size: 3.4rem; line-height: 1; color: var(--tomato); min-width: 1.2em; text-align: center; }
+  .target .lbl { font-size: 1.1rem; }
+  .target .lbl b { font-family: var(--font-fun); font-size: 1.5rem; display: block; }
+  .say { border: 0; background: var(--sky); border-radius: 999px; width: 48px; height: 48px; font-size: 1.4rem; cursor: pointer; }
+  .sky { position: relative; height: min(62vh, 560px); min-height: 380px; max-width: 760px; margin: 0 auto; border-radius: 26px; overflow: hidden; box-shadow: var(--lift);
+    background: linear-gradient(180deg, #8fd0ff, #dff2ff 70%, #b8ec9c 70.5%, #9ad97b); touch-action: manipulation; }
+  .balloon { position: absolute; top: 0; left: 0; width: 84px; height: 104px; border: 0; padding: 0; background: none; cursor: pointer; will-change: transform; }
+  .balloon .body { position: absolute; inset: 0 0 18px 0; border-radius: 50% 50% 48% 48% / 56% 56% 44% 44%; background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.65) 0 10%, transparent 11%), var(--c);
+    display: flex; align-items: center; justify-content: center; font-family: var(--font-fun); font-weight: 700; font-size: 2.6rem; color: #fff; text-shadow: 0 2px 0 rgba(0,0,0,.15); box-shadow: inset -8px -10px 0 rgba(0,0,0,.08); }
+  .balloon .knot { position: absolute; left: 50%; bottom: 12px; width: 12px; height: 10px; margin-left: -6px; background: var(--c); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .balloon .str { position: absolute; left: 50%; bottom: -26px; width: 2px; height: 38px; background: rgba(26,35,80,.45); }
+  .balloon.pop .body { animation: pop .28s forwards; }
+  .balloon.pop .knot, .balloon.pop .str { opacity: 0; }
+  .balloon.wrong .body { animation: shake .35s; }
+  @keyframes pop { to { transform: scale(1.6); opacity: 0; } }
+  @keyframes shake { 25% { transform: translateX(-8px); } 50% { transform: translateX(8px); } 75% { transform: translateX(-5px); } }
+  .sky .overlay { border-radius: 26px; }
+  .sun { position: absolute; top: 18px; inset-inline-start: 22px; width: 64px; height: 64px; border-radius: 50%; background: var(--sun); box-shadow: 0 0 0 10px rgba(255,210,63,.35); }
+</style>
+</head>
+<body>
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>בלוני האותיות</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="modes" role="group" aria-label="אילו אותיות">
+    <button class="kbtn white" data-mode="first" type="button" aria-pressed="true">א׳–י׳</button>
+    <button class="kbtn white" data-mode="all" type="button" aria-pressed="false">כל האותיות</button>
+    <button class="kbtn white" data-mode="finals" type="button" aria-pressed="false">אותיות סופיות</button>
+  </div>
+  <div class="target" aria-live="polite">
+    <span class="big" id="t-letter">א</span>
+    <span class="lbl">פוצצו את הבלונים עם האות<b id="t-name">אל״ף</b></span>
+    <button class="say" id="say" type="button" aria-label="השמעת שם האות" hidden>🗣️</button>
+  </div>
+  <div class="hud">
+    <span class="chip">⭐ <b id="score">0</b></span>
+    <span class="chip">עוד <b id="left">4</b> בלונים לאות הבאה</span>
+  </div>
+  <div class="sky" id="sky">
+    <span class="sun" aria-hidden="true"></span>
+    <div class="overlay" id="ov-start">
+      <h2>בלוני האותיות</h2>
+      <p>בלונים עם אותיות עפים לשמיים. לחצו רק על הבלונים עם האות שלמעלה!</p>
+      <button class="kbtn" id="start" type="button">מתחילים</button>
+    </div>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+  var ALL = [['א', 'אל״ף'], ['ב', 'בי״ת'], ['ג', 'גימ״ל'], ['ד', 'דל״ת'], ['ה', 'ה״א'], ['ו', 'וי״ו'], ['ז', 'זי״ן'], ['ח', 'חי״ת'], ['ט', 'טי״ת'], ['י', 'יו״ד'],
+    ['כ', 'כ״ף'], ['ל', 'למ״ד'], ['מ', 'מ״ם'], ['נ', 'נו״ן'], ['ס', 'סמ״ך'], ['ע', 'עי״ן'], ['פ', 'פ״א'], ['צ', 'צד״י'], ['ק', 'קו״ף'], ['ר', 'רי״ש'], ['ש', 'שי״ן'], ['ת', 'תי״ו']];
+  var FINALS = [['ך', 'כ״ף סופית'], ['ם', 'מ״ם סופית'], ['ן', 'נו״ן סופית'], ['ף', 'פ״א סופית'], ['ץ', 'צד״י סופית']];
+  var MODES = {
+    first: { pool: ALL.slice(0, 10), extra: [] },
+    all: { pool: ALL, extra: [] },
+    finals: { pool: FINALS, extra: [['כ'], ['מ'], ['נ'], ['פ'], ['צ']] },
+  };
+  var COLORS = ['#ff6b4a', '#2f80ff', '#2fb36d', '#7a5cff', '#ff5fa2', '#13b5a6', '#f2a705'];
+  var PER_LETTER = 4;
+
+  var sky = document.getElementById('sky');
+  var mode = 'first', target = null, score = 0, left = PER_LETTER, balloons = [], running = false, spawnT = 0, last = 0, raf = 0, order = [];
+  var voice = null;
+
+  function pickVoice() {
+    if (!('speechSynthesis' in window)) return;
+    var vs = speechSynthesis.getVoices();
+    voice = vs.filter(function (v) { return /^he|^iw/i.test(v.lang); })[0] || null;
+    document.getElementById('say').hidden = !voice;
+  }
+  if ('speechSynthesis' in window) { pickVoice(); speechSynthesis.onvoiceschanged = pickVoice; }
+  function speak() {
+    if (!voice || !target) return;
+    var u = new SpeechSynthesisUtterance(target[1].replace(/״/g, ''));
+    u.voice = voice; u.lang = voice.lang; u.rate = 0.9;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }
+
+  function nextTarget() {
+    var pool = MODES[mode].pool;
+    if (!order.length) order = K.shuffle(pool);
+    target = order.pop();
+    left = PER_LETTER;
+    document.getElementById('t-letter').textContent = target[0];
+    document.getElementById('t-name').textContent = target[1];
+    document.getElementById('left').textContent = left;
+    speak();
+  }
+
+  function letterPool() {
+    var m = MODES[mode];
+    return m.pool.map(function (x) { return x[0]; }).concat(m.extra.map(function (x) { return x[0]; }));
+  }
+
+  function spawn() {
+    var W = sky.clientWidth, H = sky.clientHeight;
+    var isTarget = Math.random() < 0.38 || !balloons.some(function (b) { return b.letter === target[0] && !b.dead; });
+    var others = letterPool().filter(function (l) { return l !== target[0]; });
+    var letter = isTarget ? target[0] : K.pick(others);
+    var el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'balloon';
+    el.style.setProperty('--c', K.pick(COLORS));
+    el.setAttribute('aria-label', 'בלון ' + letter);
+    el.innerHTML = '<span class="body">' + letter + '</span><span class="knot"></span><span class="str"></span>';
+    var x = 8 + Math.random() * Math.max(10, W - 100);
+    var b = { el: el, x: x, y: H + 20, v: (H / (7.5 - Math.min(3.5, score * 0.06))) * (0.85 + Math.random() * 0.3), letter: letter, sway: Math.random() * 6, dead: false };
+    el.addEventListener('pointerdown', function (e) { e.preventDefault(); hit(b); });
+    el.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); hit(b); } });
+    sky.appendChild(el);
+    balloons.push(b);
+  }
+
+  function hit(b) {
+    if (!running || b.dead) return;
+    if (b.letter === target[0]) {
+      b.dead = true;
+      b.el.classList.add('pop');
+      K.sfx.pop();
+      score++; left--;
+      document.getElementById('score').textContent = score;
+      document.getElementById('left').textContent = Math.max(0, left);
+      setTimeout(function () { b.el.remove(); }, 300);
+      if (left <= 0) { K.sfx.win(); if (score % 20 === 0) K.confetti(); nextTarget(); }
+    } else {
+      K.sfx.bad();
+      b.el.classList.remove('wrong'); void b.el.offsetWidth; b.el.classList.add('wrong');
+    }
+  }
+
+  function loop(now) {
+    var dt = Math.min(0.05, (now - last) / 1000 || 0);
+    last = now;
+    spawnT -= dt;
+    if (spawnT <= 0) { spawn(); spawnT = Math.max(0.55, 1.1 - score * 0.01); }
+    for (var i = balloons.length - 1; i >= 0; i--) {
+      var b = balloons[i];
+      if (!b.dead) b.y -= b.v * dt;
+      b.sway += dt * 2;
+      b.el.style.transform = 'translate(' + (b.x + Math.sin(b.sway) * 10) + 'px,' + b.y + 'px)';
+      if (b.y < -140) { b.el.remove(); balloons.splice(i, 1); }
+      else if (b.dead && !b.el.isConnected) balloons.splice(i, 1);
+    }
+    if (running) raf = requestAnimationFrame(loop);
+  }
+
+  function start() {
+    K.audio();
+    balloons.forEach(function (b) { b.el.remove(); });
+    balloons = []; score = 0; order = [];
+    document.getElementById('score').textContent = 0;
+    document.getElementById('ov-start').hidden = true;
+    nextTarget();
+    running = true; spawnT = 0; last = performance.now();
+    cancelAnimationFrame(raf);
+    raf = requestAnimationFrame(loop);
+  }
+
+  document.querySelector('.modes').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-mode]');
+    if (!b) return;
+    mode = b.dataset.mode;
+    document.querySelectorAll('.modes [data-mode]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    start();
+  });
+  document.getElementById('start').addEventListener('click', start);
+  document.getElementById('say').addEventListener('click', speak);
+  document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { running = false; cancelAnimationFrame(raf); }
+    else if (document.getElementById('ov-start').hidden) { running = true; last = performance.now(); raf = requestAnimationFrame(loop); }
+  });
+})();
+</script>
+</body>
+</html>

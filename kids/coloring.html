@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>דפי צביעה · איזור הילדים</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .pics { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .pics .kbtn[aria-pressed="true"] { background: var(--pink); color: #fff; }
+  .studio { display: grid; grid-template-columns: minmax(0, 1fr) 132px; gap: 16px; max-width: 900px; margin: 0 auto; align-items: start; }
+  @media (max-width: 700px) { .studio { grid-template-columns: minmax(0, 1fr); } }
+  .paper { background: #fff; border-radius: 24px; box-shadow: var(--lift); padding: 10px; }
+  .paper svg { display: block; width: 100%; height: auto; touch-action: manipulation; }
+  .paper .r { cursor: pointer; transition: fill .15s; }
+  .tools { display: flex; flex-direction: column; gap: 12px; }
+  @media (max-width: 700px) { .tools { flex-direction: row; flex-wrap: wrap; justify-content: center; } }
+  .palette { display: grid; grid-template-columns: repeat(3, 36px); gap: 8px; background: #fff; padding: 12px; border-radius: 20px; box-shadow: var(--press); }
+  @media (max-width: 700px) { .palette { grid-template-columns: repeat(7, 36px); } }
+  .sw { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--line); cursor: pointer; padding: 0; }
+  .sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); transform: scale(1.1); }
+  .tools .kbtn { font-size: 1rem; padding: 10px 14px; }
+</style>
+</head>
+<body>
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>דפי צביעה</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="pics" role="group" aria-label="בחירת ציור">
+    <button class="kbtn white" data-pic="menorah" type="button" aria-pressed="true">חנוכייה</button>
+    <button class="kbtn white" data-pic="tank" type="button" aria-pressed="false">טנק מבצעים</button>
+    <button class="kbtn white" data-pic="dreidel" type="button" aria-pressed="false">סביבון</button>
+    <button class="kbtn white" data-pic="shabbat" type="button" aria-pressed="false">שולחן שבת</button>
+  </div>
+  <div class="studio">
+    <div class="paper" id="paper"></div>
+    <div class="tools">
+      <div class="palette" id="palette" role="group" aria-label="צבעים"></div>
+      <button class="kbtn white" id="undo" type="button">↩ ביטול</button>
+      <button class="kbtn white" id="clear" type="button">דף חדש</button>
+      <button class="kbtn" id="save" type="button">שמירת הציור</button>
+    </div>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+  var INK = '#1a2350';
+  var COLORS = ['#ff4d4d', '#ff9f1c', '#ffd23f', '#2fb36d', '#13b5a6', '#2f80ff', '#1a2350', '#7a5cff', '#ff5fa2', '#8b5a2b', '#c0c7dd', '#ffe0bd', '#111111', '#ffffff'];
+  var color = COLORS[2];
+  var undo = [];
+  var pic = 'menorah';
+
+  function attrs(o) { return Object.keys(o).map(function (k) { return k + '="' + o[k] + '"'; }).join(' '); }
+  function R(tag, o) { return '<' + tag + ' class="r" fill="#ffffff" stroke="' + INK + '" stroke-width="4" stroke-linejoin="round" ' + attrs(o) + '/>'; }
+  function T(x, y, size, text, extra) {
+    return '<text class="r" x="' + x + '" y="' + y + '" font-size="' + size + '" text-anchor="middle" font-family="Fredoka, Rubik, Arial" font-weight="700" fill="' + INK + '" stroke="' + INK + '" stroke-width="1.5" ' + (extra || '') + '>' + text + '</text>';
+  }
+  function pts(a) { return a.map(function (p) { return p[0].toFixed(1) + ',' + p[1].toFixed(1); }).join(' '); }
+  function flame(cx, top) { return R('path', { d: 'M' + cx + ' ' + top + ' C' + (cx + 13) + ' ' + (top + 14) + ' ' + (cx + 11) + ' ' + (top + 28) + ' ' + cx + ' ' + (top + 30) + ' C' + (cx - 11) + ' ' + (top + 28) + ' ' + (cx - 13) + ' ' + (top + 14) + ' ' + cx + ' ' + top + ' Z' }); }
+
+  var PICS = {
+    // חנוכייה בסגנון חב״ד – קנים ישרים ואלכסוניים
+    menorah: function () {
+      var s = R('rect', { x: 0, y: 0, width: 600, height: 500 }) + R('rect', { x: 0, y: 430, width: 600, height: 70 });
+      var arms = '', tops = '';
+      for (var i = 4; i >= 1; i--) {
+        [-1, 1].forEach(function (sg) {
+          var d = 54 * i, cx = 300 + sg * d, y0 = 158 + d, n = [6, 6 * sg];
+          arms += R('polygon', { points: pts([[300 + n[0], y0 + n[1]], [cx + n[0], 158 + n[1]], [cx - n[0], 158 - n[1]], [300 - n[0], y0 - n[1]]]) });
+          tops += R('polygon', { points: pts([[cx - 18, 134], [cx + 18, 134], [cx + 11, 158], [cx - 11, 158]]) }) +
+            R('rect', { x: cx - 8, y: 80, width: 16, height: 54, rx: 3 }) + flame(cx, 46);
+        });
+      }
+      s += arms + R('rect', { x: 288, y: 114, width: 24, height: 292, rx: 6 }) +
+        R('polygon', { points: pts([[214, 432], [386, 432], [352, 396], [248, 396]]) }) + tops +
+        R('polygon', { points: pts([[282, 90], [318, 90], [311, 116], [289, 116]]) }) +
+        R('rect', { x: 292, y: 36, width: 16, height: 54, rx: 3 }) + flame(300, 4);
+      return s;
+    },
+    tank: function () {
+      return R('rect', { x: 0, y: 0, width: 600, height: 330 }) + R('circle', { cx: 528, cy: 70, r: 42 }) +
+        R('ellipse', { cx: 110, cy: 78, rx: 52, ry: 22 }) + R('ellipse', { cx: 150, cy: 62, rx: 40, ry: 26 }) + R('ellipse', { cx: 290, cy: 52, rx: 46, ry: 18 }) +
+        R('rect', { x: 0, y: 330, width: 600, height: 50 }) + R('rect', { x: 0, y: 380, width: 600, height: 120 }) +
+        R('rect', { x: 20, y: 436, width: 90, height: 12, rx: 4 }) + R('rect', { x: 170, y: 436, width: 90, height: 12, rx: 4 }) + R('rect', { x: 320, y: 436, width: 90, height: 12, rx: 4 }) + R('rect', { x: 470, y: 436, width: 90, height: 12, rx: 4 }) +
+        R('polygon', { points: '426,198 466,170 472,198' }) +
+        R('rect', { x: 92, y: 132, width: 330, height: 62, rx: 8 }) + T(257, 176, 38, 'מבצע תפילין') +
+        R('rect', { x: 60, y: 198, width: 404, height: 142, rx: 18 }) +
+        R('path', { d: 'M464 236 L532 236 Q548 236 554 252 L568 300 L568 340 L464 340 Z' }) +
+        R('path', { d: 'M476 248 L528 248 Q538 248 542 258 L554 296 L476 296 Z' }) +
+        R('rect', { x: 88, y: 222, width: 84, height: 52, rx: 8 }) + R('rect', { x: 190, y: 222, width: 84, height: 52, rx: 8 }) +
+        R('rect', { x: 300, y: 220, width: 64, height: 110, rx: 6 }) + R('circle', { cx: 352, cy: 280, r: 6 }) +
+        R('rect', { x: 60, y: 300, width: 240, height: 18 }) + R('rect', { x: 364, y: 300, width: 100, height: 18 }) +
+        R('rect', { x: 556, y: 318, width: 28, height: 18, rx: 4 }) + R('circle', { cx: 556, cy: 304, r: 8 }) +
+        R('circle', { cx: 150, cy: 345, r: 42 }) + R('circle', { cx: 150, cy: 345, r: 16 }) +
+        R('circle', { cx: 440, cy: 345, r: 42 }) + R('circle', { cx: 440, cy: 345, r: 16 });
+    },
+    dreidel: function () {
+      var s = R('rect', { x: 0, y: 0, width: 600, height: 500 }) + R('rect', { x: 0, y: 440, width: 600, height: 60 });
+      [[80, 70], [520, 90], [470, 260], [110, 300]].forEach(function (p) {
+        var x = p[0], y = p[1];
+        s += R('polygon', { points: pts([[x, y - 22], [x + 7, y - 7], [x + 22, y], [x + 7, y + 7], [x, y + 22], [x - 7, y + 7], [x - 22, y], [x - 7, y - 7]]) });
+      });
+      s += R('rect', { x: 284, y: 36, width: 34, height: 96, rx: 14 }) +
+        R('polygon', { points: '170,140 380,140 432,118 222,118' }) +
+        R('polygon', { points: '380,140 432,118 432,302 380,330' }) +
+        R('path', { d: 'M170 140 L380 140 L380 330 L275 446 L170 330 Z' }) +
+        R('polygon', { points: '380,330 432,302 275,446' }) +
+        T(275, 292, 140, 'ג') + T(406, 252, 64, 'ה') +
+        R('circle', { cx: 92, cy: 418, r: 32 }) + R('circle', { cx: 92, cy: 418, r: 20 }) +
+        R('circle', { cx: 160, cy: 436, r: 26 }) + R('circle', { cx: 160, cy: 436, r: 15 }) +
+        R('circle', { cx: 506, cy: 424, r: 32 }) + R('circle', { cx: 506, cy: 424, r: 20 });
+      return s;
+    },
+    shabbat: function () {
+      var s = R('rect', { x: 0, y: 0, width: 600, height: 330 }) +
+        R('rect', { x: 224, y: 40, width: 152, height: 108, rx: 6 }) + R('rect', { x: 238, y: 54, width: 124, height: 80 }) +
+        R('polygon', { points: '250,128 250,104 262,90 274,104 274,98 300,70 326,98 326,104 338,90 350,104 350,128' }) +
+        R('rect', { x: 0, y: 330, width: 600, height: 36 }) + R('rect', { x: 0, y: 366, width: 600, height: 134 });
+      [150, 450].forEach(function (x) {
+        s += R('ellipse', { cx: x, cy: 322, rx: 46, ry: 12 }) + R('rect', { x: x - 10, y: 220, width: 20, height: 100 }) +
+          R('rect', { x: x - 24, y: 206, width: 48, height: 16, rx: 4 }) + R('rect', { x: x - 12, y: 112, width: 24, height: 94, rx: 3 }) + flame(x, 74);
+      });
+      s += R('rect', { x: 214, y: 300, width: 172, height: 22, rx: 8 });
+      [[262, 286], [338, 286]].forEach(function (c) {
+        s += R('circle', { cx: c[0] - 22, cy: c[1], r: 18 }) + R('circle', { cx: c[0] + 22, cy: c[1], r: 18 }) + R('circle', { cx: c[0], cy: c[1] - 6, r: 23 });
+      });
+      s += R('path', { d: 'M520 244 L566 244 L558 292 Q543 302 528 292 Z' }) + R('rect', { x: 538, y: 294, width: 10, height: 26 }) + R('ellipse', { cx: 543, cy: 324, rx: 22, ry: 7 }) +
+        T(300, 410, 44, 'שבת שלום');
+      return s;
+    },
+  };
+
+  function draw() {
+    undo = [];
+    document.getElementById('paper').innerHTML = '<svg id="art" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="ציור לצביעה">' + PICS[pic]() + '</svg>';
+  }
+
+  document.getElementById('palette').innerHTML = COLORS.map(function (c, i) {
+    return '<button class="sw" type="button" data-c="' + c + '" style="background:' + c + '" aria-label="צבע ' + (i + 1) + '" aria-pressed="' + (c === color) + '"></button>';
+  }).join('');
+  document.getElementById('palette').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-c]');
+    if (!b) return;
+    color = b.dataset.c;
+    document.querySelectorAll('.sw').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    K.sfx.tick();
+  });
+
+  document.getElementById('paper').addEventListener('click', function (e) {
+    var el = e.target.closest('.r');
+    if (!el) return;
+    undo.push([el, el.getAttribute('fill')]);
+    el.setAttribute('fill', color);
+    K.sfx.flip();
+  });
+  document.getElementById('undo').addEventListener('click', function () {
+    var u = undo.pop();
+    if (u) u[0].setAttribute('fill', u[1]);
+  });
+  document.getElementById('clear').addEventListener('click', draw);
+  document.querySelector('.pics').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pic]');
+    if (!b) return;
+    pic = b.dataset.pic;
+    document.querySelectorAll('.pics [data-pic]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    draw();
+  });
+  document.getElementById('save').addEventListener('click', function () {
+    var svg = document.getElementById('art');
+    var data = new XMLSerializer().serializeToString(svg);
+    var img = new Image();
+    img.onload = function () {
+      var c = document.createElement('canvas');
+      c.width = 1200; c.height = 1000;
+      var g = c.getContext('2d');
+      g.fillStyle = '#ffffff'; g.fillRect(0, 0, c.width, c.height);
+      g.drawImage(img, 0, 0, c.width, c.height);
+      c.toBlob(function (blob) {
+        var a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'הציור-שלי.png';
+        document.body.appendChild(a); a.click(); a.remove();
+        K.sfx.win();
+      }, 'image/png');
+    };
+    img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);
+  });
+  draw();
+})();
+</script>
+</body>
+</html>

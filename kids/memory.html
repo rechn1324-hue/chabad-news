@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>משחק הזיכרון · איזור הילדים</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .levels { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+  .levels .kbtn[aria-pressed="true"] { background: var(--grape); color: #fff; }
+  .board { display: grid; gap: 12px; max-width: 760px; margin: 0 auto; perspective: 900px; }
+  .card { position: relative; aspect-ratio: 3 / 4; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 18px; }
+  .card .in { position: absolute; inset: 0; transition: transform .4s; transform-style: preserve-3d; border-radius: 18px; }
+  .card.open .in, .card.done .in { transform: rotateY(180deg); }
+  .face, .back { position: absolute; inset: 0; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--press); }
+  .back { background-color: var(--grape); background-image: radial-gradient(circle at 30% 30%, rgba(255,255,255,.18) 0 18%, transparent 19%), radial-gradient(circle at 70% 72%, rgba(255,255,255,.14) 0 14%, transparent 15%); }
+  .back::after { content: '?'; font-family: var(--font-fun); font-weight: 700; color: rgba(255,255,255,.9); font-size: clamp(1.6rem, 5vw, 2.6rem); }
+  .face { background: #fff; transform: rotateY(180deg); gap: 4px; padding: 6px; }
+  .face .e { font-size: clamp(1.8rem, 6vw, 3rem); line-height: 1.1; }
+  .face .n { font-family: var(--font-fun); font-weight: 600; font-size: clamp(.8rem, 2.2vw, 1.05rem); text-align: center; line-height: 1.15; }
+  .card.done .face { background: #e7f8ee; outline: 3px solid var(--grass); }
+  .fact-bar { max-width: 760px; margin: 16px auto 0; background: #fff; border-radius: 18px; padding: 14px 18px; box-shadow: var(--press); min-height: 58px; font-size: 1.08rem; display: flex; gap: 10px; align-items: center; }
+  .fact-bar b { font-family: var(--font-fun); }
+  .wrap-rel { position: relative; max-width: 760px; margin: 0 auto; }
+  .wrap-rel .overlay { border-radius: 24px; }
+</style>
+</head>
+<body>
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>משחק הזיכרון</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="levels" role="group" aria-label="רמת קושי">
+    <button class="kbtn white" data-pairs="6" type="button" aria-pressed="true">קל · 6 זוגות</button>
+    <button class="kbtn white" data-pairs="8" type="button" aria-pressed="false">בינוני · 8 זוגות</button>
+    <button class="kbtn white" data-pairs="12" type="button" aria-pressed="false">קשה · 12 זוגות</button>
+  </div>
+  <div class="hud">
+    <span class="chip">צעדים: <b id="moves">0</b></span>
+    <span class="chip">זוגות: <b id="found">0</b>/<span id="total">6</span></span>
+    <span class="chip">זמן: <b id="time">0:00</b></span>
+  </div>
+  <div class="wrap-rel">
+    <div class="board" id="board"></div>
+    <div class="overlay" id="win" hidden>
+      <h2>מצאתם את כל הזוגות!</h2>
+      <div class="stars" id="stars"></div>
+      <p id="win-text"></p>
+      <button class="kbtn" id="again" type="button">משחק חדש</button>
+    </div>
+  </div>
+  <div class="fact-bar" id="fact" aria-live="polite">הפכו שני קלפים. כשמוצאים זוג – לומדים משהו חדש!</div>
+</main>
+
+<script src="kids.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+  var ITEMS = [
+    { e: '🕎', n: 'חנוכייה', f: 'בחנוכה מדליקים נרות שמונה ימים, לזכר נס פך השמן.' },
+    { e: '🕯️', n: 'נרות שבת', f: 'לפני שבת מדליקים נרות. בחב״ד גם בנות קטנות מדליקות נר משלהן מגיל שלוש.' },
+    { e: '📜', n: 'מגילה', f: 'בפורים קוראים את מגילת אסתר, בלילה וביום.' },
+    { e: '🍷', n: 'כוס קידוש', f: 'בשבת ובחג עושים קידוש על כוס יין או מיץ ענבים.' },
+    { e: '🍎', n: 'תפוח בדבש', f: 'בראש השנה טובלים תפוח בדבש – שתהיה שנה טובה ומתוקה.' },
+    { e: '🫓', n: 'מצה', f: 'בפסח אוכלים מצה, זכר ליציאת מצרים.' },
+    { e: '🍋', n: 'אתרוג', f: 'בסוכות מברכים על ארבעת המינים: לולב, אתרוג, הדסים וערבות.' },
+    { e: '🌴', n: 'לולב', f: 'הלולב הוא ענף של עץ תמר – אחד מארבעת המינים.' },
+    { e: '🎭', n: 'תחפושת', f: 'בפורים מתחפשים, שולחים משלוח מנות ונותנים מתנות לאביונים.' },
+    { e: '🔥', n: 'מדורה', f: 'בל״ג בעומר מדליקים מדורות ושמחים לכבוד רבי שמעון בר יוחאי.' },
+    { e: '🍞', n: 'חלה', f: 'בכל סעודת שבת מברכים על שתי חלות – "לחם משנה".' },
+    { e: '🪙', n: 'דמי חנוכה', f: 'בחנוכה נותנים לילדים דמי חנוכה – וגם מוסיפים בצדקה.' },
+    { e: '📖', n: 'סידור', f: 'בסידור נמצאות כל התפילות. מתפללים שלוש פעמים ביום.' },
+    { e: '✡️', n: 'מגן דוד', f: 'מגן דוד הוא סמל עתיק של העם היהודי.' },
+    { e: '🐑', n: 'איל', f: 'השופר של ראש השנה עשוי מקרן של איל – זכר לעקידת יצחק.' },
+    { e: '🥛', n: 'חלב', f: 'בחג השבועות נוהגים לאכול מאכלי חלב.' },
+    { e: '🪔', n: 'כד שמן', f: 'בבית המקדש נמצא כד שמן קטן אחד – והוא דלק שמונה ימים.' },
+    { e: '🌳', n: 'עץ', f: 'ט״ו בשבט הוא ראש השנה לאילנות.' },
+    { e: '🍇', n: 'ענבים', f: 'ענבים הם אחד משבעת המינים שהשתבחה בהם ארץ ישראל.' },
+    { e: '🫒', n: 'זית', f: 'בשמן זית זך הדליקו את המנורה בבית המקדש.' },
+  ];
+
+  var board = document.getElementById('board');
+  var pairs = 6, open = [], moves = 0, found = 0, lock = false, t0 = 0, timer = 0;
+
+  function cols(n) { var w = innerWidth; if (n <= 12) return w < 520 ? 3 : 4; if (n <= 16) return 4; return w < 520 ? 4 : 6; }
+  function layout(n) {
+    var c = cols(n);
+    board.style.gridTemplateColumns = 'repeat(' + c + ', minmax(0, 1fr))';
+    board.style.maxWidth = (c * 124 + (c - 1) * 12) + 'px';
+  }
+
+  function deal() {
+    clearInterval(timer);
+    open = []; moves = 0; found = 0; lock = false; t0 = 0;
+    document.getElementById('moves').textContent = 0;
+    document.getElementById('found').textContent = 0;
+    document.getElementById('total').textContent = pairs;
+    document.getElementById('time').textContent = '0:00';
+    document.getElementById('win').hidden = true;
+    var chosen = K.shuffle(ITEMS).slice(0, pairs);
+    var deck = K.shuffle(chosen.concat(chosen));
+    layout(deck.length);
+    board.innerHTML = deck.map(function (it, i) {
+      return '<button class="card" type="button" data-n="' + it.n + '" aria-label="קלף ' + (i + 1) + '"><span class="in"><span class="back"></span>' +
+        '<span class="face"><span class="e">' + it.e + '</span><span class="n">' + it.n + '</span></span></span></button>';
+    }).join('');
+  }
+
+  function tick() {
+    var s = Math.floor((Date.now() - t0) / 1000);
+    document.getElementById('time').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+
+  board.addEventListener('click', function (e) {
+    var c = e.target.closest('.card');
+    if (!c || lock || c.classList.contains('open') || c.classList.contains('done')) return;
+    if (!t0) { t0 = Date.now(); timer = setInterval(tick, 1000); }
+    K.sfx.flip();
+    c.classList.add('open');
+    c.setAttribute('aria-label', c.dataset.n);
+    open.push(c);
+    if (open.length < 2) return;
+    moves++;
+    document.getElementById('moves').textContent = moves;
+    var a = open[0], b = open[1];
+    open = [];
+    if (a.dataset.n === b.dataset.n) {
+      a.classList.add('done'); b.classList.add('done');
+      found++;
+      document.getElementById('found').textContent = found;
+      var it = ITEMS.filter(function (x) { return x.n === a.dataset.n; })[0];
+      document.getElementById('fact').innerHTML = '<span>' + it.e + '</span><span><b>' + it.n + ':</b> ' + it.f + '</span>';
+      K.sfx.good();
+      if (found === pairs) setTimeout(win, 500);
+    } else {
+      lock = true;
+      setTimeout(function () { a.classList.remove('open'); b.classList.remove('open'); a.setAttribute('aria-label', 'קלף'); b.setAttribute('aria-label', 'קלף'); lock = false; }, 900);
+    }
+  });
+
+  function win() {
+    clearInterval(timer);
+    var stars = moves <= pairs * 1.6 ? 3 : moves <= pairs * 2.3 ? 2 : 1;
+    document.getElementById('stars').textContent = '⭐'.repeat(stars);
+    document.getElementById('win-text').textContent = 'עשיתם את זה ב-' + moves + ' צעדים ובזמן ' + document.getElementById('time').textContent + '.';
+    document.getElementById('win').hidden = false;
+    K.sfx.win();
+    K.confetti();
+  }
+
+  document.querySelector('.levels').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-pairs]');
+    if (!b) return;
+    pairs = +b.dataset.pairs;
+    document.querySelectorAll('.levels [data-pairs]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    deal();
+  });
+  document.getElementById('again').addEventListener('click', deal);
+  window.addEventListener('resize', function () { layout(pairs * 2); });
+  deal();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>סביבון סוב סוב · איזור הילדים</title>
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .table { position: relative; max-width: 760px; margin: 0 auto; background: linear-gradient(180deg, #2a62c9, #1d4aa0); border-radius: 28px; padding: 22px 18px 26px; box-shadow: var(--lift); color: #fff; }
+  .where { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
+  .where button { border: 2px solid rgba(255,255,255,.5); background: transparent; color: #fff; border-radius: 999px; padding: 6px 14px; font-weight: 600; cursor: pointer; }
+  .where button[aria-pressed="true"] { background: #fff; color: var(--ink); border-color: #fff; }
+  .spin-area { display: grid; grid-template-columns: minmax(0, 1fr) 200px minmax(0, 1fr); align-items: center; gap: 10px; }
+  .dreidel-box { height: 230px; display: flex; align-items: flex-end; justify-content: center; }
+  #dreidel { width: 150px; height: 220px; transform-origin: 50% 92%; }
+  .pot { text-align: center; }
+  .pot .coins { font-size: 2.2rem; line-height: 1.1; min-height: 2.6rem; word-break: break-all; }
+  .pot b { font-family: var(--font-fun); font-size: 1.6rem; display: block; }
+  .letters-help { font-size: .95rem; line-height: 1.6; background: rgba(255,255,255,.12); border-radius: 16px; padding: 10px 14px; }
+  .letters-help b { font-family: var(--font-fun); font-size: 1.2rem; }
+  @media (max-width: 640px) { .spin-area { grid-template-columns: minmax(0, 1fr); } .letters-help { order: 3; } }
+  .msg { text-align: center; font-family: var(--font-fun); font-weight: 600; font-size: 1.45rem; min-height: 2.2em; margin: 10px 0; }
+  .players { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
+  .player { background: rgba(255,255,255,.14); border-radius: 18px; padding: 10px; text-align: center; border: 3px solid transparent; }
+  .player.turn { border-color: var(--sun); background: rgba(255,255,255,.24); }
+  .player.out { opacity: .45; }
+  .player .nm { font-family: var(--font-fun); font-weight: 600; font-size: 1.2rem; }
+  .player .cn { font-size: 1.05rem; }
+  .go { display: flex; justify-content: center; margin-top: 16px; }
+  .table .overlay { border-radius: 28px; color: var(--ink); }
+</style>
+</head>
+<body>
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>סביבון סוב סוב</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="table">
+    <div class="where" role="group" aria-label="איפה משחקים">
+      <button type="button" data-where="il" aria-pressed="true">בארץ ישראל: נ ג ה פ</button>
+      <button type="button" data-where="out" aria-pressed="false">בחוץ לארץ: נ ג ה ש</button>
+    </div>
+    <div class="spin-area">
+      <div class="letters-help" id="help"></div>
+      <div class="dreidel-box">
+        <svg id="dreidel" viewBox="0 0 150 220" aria-label="סביבון">
+          <rect x="66" y="4" width="18" height="44" rx="7" fill="#1a2350"/>
+          <path id="d-side" d="M112 46 L134 38 L134 130 L112 150 Z" fill="#e0a800" stroke="#1a2350" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M24 46 L112 46 L134 38 L46 38 Z" fill="#ffe27a" stroke="#1a2350" stroke-width="5" stroke-linejoin="round"/>
+          <path id="d-front" d="M24 46 L112 46 L112 150 L68 206 L24 150 Z" fill="#ffd23f" stroke="#1a2350" stroke-width="5" stroke-linejoin="round"/>
+          <path d="M112 150 L134 130 L68 206 Z" fill="#c99400" stroke="#1a2350" stroke-width="5" stroke-linejoin="round"/>
+          <g id="d-letter-g"><text id="d-letter" x="68" y="122" text-anchor="middle" font-family="Fredoka, Rubik, Arial" font-weight="700" font-size="68" fill="#1a2350">נ</text></g>
+        </svg>
+      </div>
+      <div class="pot"><span>בקופה</span><div class="coins" id="pot-coins"></div><b id="pot-n">0</b></div>
+    </div>
+    <div class="msg" id="msg" aria-live="polite">לוחצים על "סובבו!" ומגלים מה יוצא</div>
+    <div class="players" id="players"></div>
+    <div class="go"><button class="kbtn" id="spin" type="button">סובבו את הסביבון!</button></div>
+    <div class="overlay" id="end" hidden>
+      <h2 id="end-title"></h2>
+      <p id="end-text"></p>
+      <button class="kbtn blue" id="again" type="button">משחק חדש</button>
+    </div>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script>
+(function () {
+  'use strict';
+  var K = window.Kids;
+  var $ = function (id) { return document.getElementById(id); };
+  var where = K.load('dreidel-where', 'il');
+  var START = 10, MAX_ROUNDS = 12;
+  var g = null, spinning = false;
+
+  function letters() { return ['נ', 'ג', 'ה', where === 'il' ? 'פ' : 'ש']; }
+  var WORDS = { 'נ': 'נס', 'ג': 'גדול', 'ה': 'היה', 'פ': 'פה', 'ש': 'שם' };
+
+  function renderHelp() {
+    $('help').innerHTML = '<b>נ</b> – נס: לא קורה כלום<br><b>ג</b> – גדול: לוקחים את כל הקופה<br><b>ה</b> – היה: לוקחים חצי<br><b>' + letters()[3] + '</b> – ' + WORDS[letters()[3]] + ': מוסיפים מטבע לקופה';
+    document.querySelectorAll('[data-where]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.where === where)); });
+  }
+
+  function newGame() {
+    g = { players: [{ n: 'אני', c: START, me: true }, { n: 'מושקא', c: START }, { n: 'מענדי', c: START }], pot: 0, turn: 0, round: 1 };
+    ante();
+    $('end').hidden = true;
+    render();
+    $('msg').textContent = 'כל אחד שם מטבע בקופה. התור שלכם!';
+  }
+
+  function alive() { return g.players.filter(function (p) { return p.c > 0; }); }
+  function ante() { g.players.forEach(function (p) { if (p.c > 0) { p.c--; g.pot++; } }); }
+
+  function render() {
+    $('players').innerHTML = g.players.map(function (p, i) {
+      return '<div class="player' + (i === g.turn ? ' turn' : '') + (p.c <= 0 ? ' out' : '') + '"><div class="nm">' + p.n + '</div><div class="cn">🪙 ' + p.c + '</div></div>';
+    }).join('');
+    $('pot-n').textContent = g.pot + ' מטבעות';
+    $('pot-coins').textContent = '🪙'.repeat(Math.min(g.pot, 12)) + (g.pot > 12 ? '…' : '');
+    var me = g.turn === 0 && g.players[0].c > 0;
+    $('spin').disabled = spinning || !me;
+    $('spin').textContent = me ? 'סובבו את הסביבון!' : 'עכשיו התור של ' + g.players[g.turn].n + '…';
+  }
+
+  function animate(final, done) {
+    spinning = true;
+    render();
+    var el = $('dreidel'), letterEl = $('d-letter'), front = $('d-front');
+    var L = letters();
+    var turns = 7 + Math.random() * 3;
+    var dur = 2300, t0 = performance.now(), lastFace = -1;
+    var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) dur = 300;
+    (function frame(now) {
+      var p = Math.min(1, (now - t0) / dur);
+      var e = 1 - Math.pow(1 - p, 3);
+      var ang = e * turns * Math.PI * 2;
+      var face = Math.floor(ang / (Math.PI / 2)) % 4;
+      var sx = Math.abs(Math.cos(ang % (Math.PI / 2) - Math.PI / 4)) * 0.45 + 0.55;
+      var wob = Math.sin(now / 60) * (1 - e) * 10;
+      if (face !== lastFace) { lastFace = face; letterEl.textContent = L[face % 4]; if (!reduce) K.sfx.tick(); }
+      el.style.transform = 'rotate(' + wob + 'deg) scaleX(' + (p < 1 ? sx : 1) + ')';
+      front.setAttribute('fill', face % 2 ? '#ffc61a' : '#ffd23f');
+      if (p < 1) requestAnimationFrame(frame);
+      else { letterEl.textContent = final; el.style.transform = 'rotate(-8deg)'; front.setAttribute('fill', '#ffd23f'); spinning = false; done(); }
+    })(t0);
+  }
+
+  function play() {
+    if (spinning) return;
+    var p = g.players[g.turn];
+    var L = letters();
+    var r = K.pick(L);
+    animate(r, function () {
+      var text = p.n + (p.me ? ': קיבלתי ' : ' קיבל' + (p.n === 'מושקא' ? 'ה' : '') + ' ') + r + ' – ' + WORDS[r] + '! ';
+      if (r === 'נ') { text += 'לא קורה כלום.'; K.sfx.flip(); }
+      else if (r === 'ג') { text += 'לוקחים את כל הקופה (' + g.pot + ')!'; p.c += g.pot; g.pot = 0; K.sfx.win(); }
+      else if (r === 'ה') { var h = Math.ceil(g.pot / 2); text += 'לוקחים חצי (' + h + ').'; p.c += h; g.pot -= h; K.sfx.good(); }
+      else { text += 'מוסיפים מטבע לקופה.'; if (p.c > 0) { p.c--; g.pot++; } K.sfx.bad(); }
+      $('msg').textContent = text;
+      if (g.pot === 0) { ante(); $('msg').textContent = text + ' הקופה התרוקנה – כולם מוסיפים מטבע.'; }
+      nextTurn();
+    });
+  }
+
+  function nextTurn() {
+    var live = alive();
+    if (live.length <= 1) return finish();
+    var n = g.turn;
+    do { n = (n + 1) % g.players.length; if (n === 0) g.round++; } while (g.players[n].c <= 0);
+    g.turn = n;
+    if (g.round > MAX_ROUNDS || g.players[0].c <= 0) return finish();
+    render();
+    if (!g.players[g.turn].me) setTimeout(play, 1100);
+  }
+
+  function finish() {
+    render();
+    var max = Math.max.apply(null, g.players.map(function (p) { return p.c; }));
+    var winners = g.players.filter(function (p) { return p.c === max; });
+    var meWin = winners.some(function (p) { return p.me; });
+    $('end-title').textContent = meWin ? (winners.length > 1 ? 'תיקו! גם אתם מנצחים' : 'ניצחתם!') : 'ניצח' + (winners[0].n === 'מושקא' ? 'ה' : '') + ' ' + winners[0].n + '!';
+    $('end-text').textContent = 'נס גדול היה ' + (where === 'il' ? 'פה' : 'שם') + '! ' + g.players.map(function (p) { return p.n + ': ' + p.c; }).join(' · ');
+    $('end').hidden = false;
+    if (meWin) { K.sfx.win(); K.confetti(); }
+  }
+
+  $('spin').addEventListener('click', function () { K.audio(); play(); });
+  $('again').addEventListener('click', newGame);
+  document.querySelector('.where').addEventListener('click', function (e) {
+    var b = e.target.closest('[data-where]');
+    if (!b || spinning) return;
+    where = b.dataset.where;
+    K.save('dreidel-where', where);
+    $('d-letter').textContent = 'נ';
+    renderHelp();
+  });
+
+  renderHelp();
+  newGame();
+})();
+</script>
+</body>
+</html>
