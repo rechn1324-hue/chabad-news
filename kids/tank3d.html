@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>טנק המבצעים 3D · איזור הילדים</title>
+<meta name="description" content="משחק תלת־ממד: נוהגים בטנק המבצעים ברחובות העיר, עוברים נתיבים, קופצים מעל מכשולים ואוספים מצוות. שברו את השיא של כולם!">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .stage.t3 { width: min(100%, 860px); background: linear-gradient(180deg, #74bdff 0%, #b5ddff 34%, #dff1ff 56%, #dff1ff 100%); }
+  .t3 .overlay { background: rgba(220, 239, 255, .8); }
+  .hud3 { position: absolute; top: 8px; left: 8px; right: 8px; z-index: 2; display: flex; justify-content: center; gap: 6px; flex-wrap: wrap; pointer-events: none; }
+  .hud3 .chip { pointer-events: auto; padding: 4px 12px; font-size: 1rem; }
+  .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 14px; font-size: .98rem; }
+  .legend span { white-space: nowrap; }
+</style>
+</head>
+<body class="play">
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>טנק המבצעים 3D</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="stage t3" id="stage">
+    <div class="hud3">
+      <span class="chip">⭐ <b id="score">0</b></span>
+      <span class="chip">מצוות <b id="mitz">0</b></span>
+      <span class="chip" id="lives" role="img" aria-label="3 חיים">❤️❤️❤️</span>
+      <button class="chip" id="pause-btn" type="button" aria-label="הפסקה">⏸</button>
+    </div>
+    <div class="toast" id="toast" aria-live="polite"></div>
+
+    <div class="overlay" id="ov-start">
+      <h2>טנק המבצעים 3D</h2>
+      <p>נוסעים ברחובות העיר ואוספים מצוות! קופצים מעל קונוסים ומחסומים נמוכים, ועוקפים גדרות גבוהות.</p>
+      <div class="legend"><span>✔ נרות שבת</span><span>✔ תפילין</span><span>✔ צדקה</span><span>✔ מזוזה</span><span>✔ סידור</span></div>
+      <p class="how">בטלפון: מחליקים ימינה או שמאלה כדי לעבור נתיב, ולמעלה כדי לקפוץ (או בכפתורים למטה).</p>
+      <p class="how keys-hint">במחשב: חיצים ימינה ושמאלה, רווח או חץ למעלה לקפיצה, P להפסקה.</p>
+      <button class="kbtn blue" id="start" type="button">יוצאים לדרך!</button>
+      <p class="records-line" id="best-start"></p>
+    </div>
+    <div class="overlay" id="ov-pause" hidden>
+      <h2>הפסקה קטנה</h2>
+      <button class="kbtn blue" id="resume" type="button">ממשיכים</button>
+    </div>
+    <div class="fail-box" id="fail" hidden>
+      <h2 id="fail-title">המשחק לא נטען</h2>
+      <p id="fail-text"></p>
+      <a class="kbtn blue" href="tank.html">לטנק המבצעים הרגיל</a>
+    </div>
+  </div>
+
+  <div class="pad" aria-label="שליטה">
+    <button class="kbtn white" id="btn-left" type="button" aria-label="נתיב שמאלה">◀</button>
+    <button class="kbtn white wide" id="btn-jump" type="button">⤒ קפיצה</button>
+    <button class="kbtn white" id="btn-right" type="button" aria-label="נתיב ימינה">▶</button>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script src="leaderboard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+<script src="tank3d.js"></script>
+</body>
+</html>

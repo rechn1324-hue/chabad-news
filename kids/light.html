@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>האור מנצח · איזור הילדים</title>
+<meta name="description" content="משחק אקשן: נר קטן שולח קרני אור והופך עננים חשוכים לעננים של אור. מעט אור דוחה הרבה חושך!">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .stage.night { width: min(100%, 520px); background: #12164a; }
+  .night .overlay { background: rgba(14, 18, 62, .88); color: #fff; }
+  .night .overlay .how, .night .overlay .records-line { color: #cfd6ff; }
+  .quote { font-family: var(--font-fun); font-weight: 600; font-size: 1.15rem; color: var(--sun); }
+  .pad .meter-btn { --fill: 0%; width: min(100%, 340px); height: 56px; font-size: 1.15rem; padding: 0 14px; white-space: nowrap; color: var(--ink);
+    background: linear-gradient(to left, #ffd23f var(--fill), #ffffff var(--fill)); }
+  .pad .meter-btn[disabled] { opacity: 1; cursor: default; }
+  .pad .meter-btn.ready { background: var(--sun); animation: glowpulse 1s ease-in-out infinite; }
+  @keyframes glowpulse { 50% { box-shadow: 0 5px 0 rgba(26, 35, 80, .16), 0 0 0 8px rgba(255, 210, 63, .45); } }
+</style>
+</head>
+<body class="play">
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>האור מנצח</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="hud">
+    <span class="chip">⭐ <b id="score">0</b></span>
+    <span class="chip">גל <b id="wave">1</b></span>
+    <span class="chip" id="lives" role="img" aria-label="3 חיים">❤️❤️❤️</span>
+    <button class="chip" id="pause-btn" type="button" aria-label="הפסקה">⏸</button>
+  </div>
+
+  <div class="stage night" id="stage">
+    <canvas id="cv" aria-label="משחק האור מנצח: נר שולח קרני אור לעננים"></canvas>
+    <div class="overlay" id="ov-start">
+      <h2>האור מנצח! ✨</h2>
+      <p>עננים חשוכים יורדים על העיר. אתם נר קטן ששולח קרני אור – וכל ענן חשוך שנפגע הופך לענן לבן ושמח!</p>
+      <p class="quote">״מעט אור דוחה הרבה חושך״ – כך מלמדת אותנו החסידות</p>
+      <p class="how">אל תתנו לעננים החשוכים להגיע לבתים, ותיזהרו מטיפות החושך. תפסו 🏺 כד שמן לאור משולש, ❤️ ללב נוסף ומטבע צדקה לבונוס.</p>
+      <p class="how">בטלפון: גוררים את האצבע ימינה ושמאלה – האור יוצא לבד!</p>
+      <p class="how keys-hint">במחשב: חיצים או עכבר. רווח = אור גדול, P = הפסקה.</p>
+      <button class="kbtn" id="start" type="button">מדליקים את האור!</button>
+      <p class="records-line" id="best-start"></p>
+    </div>
+    <div class="overlay" id="ov-pause" hidden>
+      <h2>הפסקה קטנה</h2>
+      <button class="kbtn" id="resume" type="button">ממשיכים</button>
+    </div>
+  </div>
+
+  <div class="pad">
+    <button class="kbtn meter-btn" id="big-light" type="button" disabled>✨ אור גדול – אוספים אור…</button>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script src="leaderboard.js"></script>
+<script src="light.js"></script>
+</body>
+</html>

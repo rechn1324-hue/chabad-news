@@ -25,6 +25,10 @@
   .sw { width: 36px; height: 36px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 2px var(--line); cursor: pointer; padding: 0; }
   .sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--ink); transform: scale(1.1); }
   .tools .kbtn { font-size: 1rem; padding: 10px 14px; }
+  .tools .kbtn.confirm { background: var(--tomato); color: #fff; }
+  .saved-note { max-width: 900px; margin: 14px auto 0; background: var(--teal); color: #fff; border-radius: 18px; padding: 12px 16px; font-weight: 600; text-align: center; }
+  .saved-note a { color: #fff; }
+  @media (max-width: 520px) { .pics .kbtn { font-size: 1rem; padding: 9px 14px; } .game-main { padding-top: 12px; } }
 </style>
 </head>
 <body>
@@ -52,6 +56,7 @@
       <button class="kbtn" id="save" type="button">שמירת הציור</button>
     </div>
   </div>
+  <p class="saved-note" id="saved-note" hidden>הציור נשמר! 🎨 רוצים שהוא יופיע באיזור הילדים? בקשו מאבא או אמא לשלוח אותו אלינו – <a href="./#gallery">איך שולחים?</a></p>
 </main>
 
 <script src="kids.js"></script>
@@ -172,7 +177,20 @@
     var u = undo.pop();
     if (u) u[0].setAttribute('fill', u[1]);
   });
-  document.getElementById('clear').addEventListener('click', draw);
+  // "דף חדש" מוחק הכול – מבקשים לחיצה שנייה כדי שלא יימחק בטעות
+  var clearBtn = document.getElementById('clear'), clearArm = 0;
+  clearBtn.addEventListener('click', function () {
+    if (!undo.length) { draw(); return; }
+    if (clearArm) {
+      clearTimeout(clearArm); clearArm = 0;
+      clearBtn.textContent = 'דף חדש'; clearBtn.classList.remove('confirm');
+      draw();
+      return;
+    }
+    clearBtn.textContent = 'בטוחים? לחצו שוב';
+    clearBtn.classList.add('confirm');
+    clearArm = setTimeout(function () { clearArm = 0; clearBtn.textContent = 'דף חדש'; clearBtn.classList.remove('confirm'); }, 2500);
+  });
   document.querySelector('.pics').addEventListener('click', function (e) {
     var b = e.target.closest('[data-pic]');
     if (!b) return;
@@ -195,7 +213,9 @@
         a.href = URL.createObjectURL(blob);
         a.download = 'הציור-שלי.png';
         document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(a.href); }, 4000);
         K.sfx.win();
+        document.getElementById('saved-note').hidden = false;
       }, 'image/png');
     };
     img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(data);

@@ -42,6 +42,8 @@ const KEEP = {
 };
 const ENRICH_LIMIT = 90;
 const CHABAD_RE = /חב["״׳']ד|ליובאוויטש|ליובאוויץ|\bchabad\b|\blubavitch/i;
+// ניקוד מקסימלי סביר לכל משחק – שיא גבוה מזה כנראה מזויף ולא נכנס לטבלה
+const SCORE_MAX = { tank: 1000, tank3d: 100000, light: 200000, tower: 2000, letters: 3000, 'quiz-small': 1500, 'quiz-big': 1500 };
 const NAME_BAD = ['זונה', 'שרמוטה', 'מניאק', 'חרא', 'כוס', 'זין', 'מזדיין', 'fuck', 'shit', 'bitch', 'dick', 'porn', 'sex', 'nazi', 'נאצי'];
 
 // ---------------------------------------------------------------- text helpers
@@ -585,7 +587,7 @@ async function updateScores(content) {
     const g = String(m.g || '');
     if (!/^[a-z0-9-]{2,24}$/.test(g)) continue;
     const s = Math.floor(Number(m.s));
-    if (!Number.isFinite(s) || s <= 0 || s > 1e7) continue;
+    if (!Number.isFinite(s) || s <= 0 || s > (SCORE_MAX[g] || 1e6)) continue;
     const n = String(m.n || '').replace(/[^\p{L}\p{N} ]/gu, '').replace(/\s+/g, ' ').trim().slice(0, 14);
     if (!n || isBlocked(n, bad)) continue;
     const t = Math.min(Number(m.t) || ev.time * 1000, NOW);

@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>בונים את בית המקדש · איזור הילדים</title>
+<meta name="description" content="משחק תלת־ממד: מניחים אבן על אבן בדיוק מושלם ובונים גבוה ככל האפשר. שברו את השיא של כולם!">
+<meta name="theme-color" content="#ffffff">
+<link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="kids.css">
+<style>
+  .stage.tw { width: min(100%, 640px); background: linear-gradient(180deg, #7cc4ff, #e6f6ff); cursor: pointer; }
+  .tw .overlay { background: rgba(255, 248, 230, .86); }
+  .height { position: absolute; top: 10px; left: 0; right: 0; z-index: 2; text-align: center; pointer-events: none; font-family: var(--font-fun); font-weight: 700; color: #fff; text-shadow: 0 3px 0 rgba(26, 35, 80, .35); }
+  .height b { display: block; font-size: 3.4rem; line-height: 1; }
+  .height span { font-size: 1rem; }
+  .combo { position: absolute; top: 96px; left: 0; right: 0; z-index: 2; text-align: center; pointer-events: none; font-family: var(--font-fun); font-weight: 700; font-size: 1.4rem; color: var(--sun); text-shadow: 0 2px 0 rgba(26, 35, 80, .45); opacity: 0; transition: opacity .2s; }
+  .combo.show { opacity: 1; }
+  .tw .toast { top: auto; bottom: 14px; white-space: normal; width: max-content; max-width: 90%; text-align: center; font-size: 1.05rem; line-height: 1.35; border-radius: 18px; padding: 8px 16px; }
+  .corner { position: absolute; top: 10px; inset-inline-end: 10px; z-index: 2; }
+  .viewbar { position: absolute; left: 10px; right: 10px; bottom: 12px; z-index: 3; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+</style>
+</head>
+<body class="play">
+<header class="kbar">
+  <div class="kwrap kbar-row">
+    <a class="kback" href="./">→ כל המשחקים</a>
+    <h1>בונים את בית המקדש</h1>
+    <button class="ksound" id="sound" type="button">🔊</button>
+  </div>
+</header>
+
+<main class="kwrap game-main">
+  <div class="stage tw" id="stage">
+    <div class="height" aria-live="polite"><b id="height">0</b><span>אבנים</span></div>
+    <div class="combo" id="combo"></div>
+    <button class="chip corner" id="pause-btn" type="button" aria-label="הפסקה">⏸</button>
+    <div class="toast" id="toast" aria-live="polite"></div>
+
+    <div class="overlay" id="ov-start">
+      <h2>בונים את בית המקדש 🧱</h2>
+      <p>אבן זזה מעל הבניין. לוחצים בדיוק כשהיא מעל האבן שמתחת – ומה שבולט החוצה נופל!</p>
+      <p class="how">הנחה מושלמת = ✨ מושלם! שלוש הנחות מושלמות ברצף מגדילות את האבן בחזרה. ככל שבונים גבוה יותר – האבנים זזות מהר יותר.</p>
+      <p class="how">נוגעים במסך (או לוחצים רווח) כדי להניח אבן.</p>
+      <button class="kbtn" id="start" type="button">מתחילים לבנות!</button>
+      <p class="records-line" id="best-start"></p>
+    </div>
+    <div class="overlay" id="ov-pause" hidden>
+      <h2>הפסקה קטנה</h2>
+      <button class="kbtn" id="resume" type="button">ממשיכים</button>
+    </div>
+    <div class="viewbar" id="viewbar" hidden>
+      <button class="kbtn blue" id="view-again" type="button">עוד סיבוב</button>
+      <button class="kbtn white" id="view-results" type="button">🏆 התוצאות</button>
+    </div>
+    <div class="fail-box" id="fail" hidden>
+      <h2 id="fail-title">המשחק לא נטען</h2>
+      <p id="fail-text"></p>
+      <a class="kbtn blue" href="./">לכל המשחקים</a>
+    </div>
+  </div>
+</main>
+
+<script src="kids.js"></script>
+<script src="leaderboard.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" crossorigin="anonymous"></script>
+<script src="tower.js"></script>
+</body>
+</html>

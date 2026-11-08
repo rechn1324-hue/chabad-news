@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>איזור הילדים · חב״ד בזמן אמת</title>
-<meta name="description" content="משחקים, חידונים ודברים מעניינים לילדים: טנק המבצעים, משחק זיכרון, אותיות, חידון, סביבון וצביעה.">
+<meta name="description" content="משחקים, חידונים, סרטונים ויצירות של ילדים: טנק המבצעים בתלת־ממד, האור מנצח, בונים את בית המקדש, חידון, אותיות, סביבון וצביעה – ותחרות שיאים לכל הילדים.">
 <meta name="theme-color" content="#bfe1ff">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -18,7 +18,10 @@
     <div>
       <a class="kback" href="../">→ לאתר החדשות</a>
       <h1 class="ktitle">איזור <span>הילדים</span></h1>
-      <p class="ksub">משחקים, חידונים ודברים מעניינים – בשבילכם!</p>
+      <p class="ksub">משחקים, חידונים, סרטונים ודברים מעניינים – בשבילכם!</p>
+      <div class="khead-actions">
+        <a class="kbtn green small" id="share-hub" href="https://wa.me/" target="_blank" rel="noopener">שתפו את איזור הילדים 💬</a>
+      </div>
     </div>
     <svg class="khead-art" viewBox="0 0 300 170" aria-hidden="true">
       <rect x="0" y="146" width="300" height="24" rx="6" fill="#8b93b8"/>
@@ -53,11 +56,34 @@
     </div>
   </section>
 
+  <a class="shorts-cta" href="../shorts.html?c=kids">
+    <span class="sc-icon" aria-hidden="true">
+      <svg viewBox="0 0 44 44"><rect x="11" y="3" width="22" height="38" rx="6" fill="#fff"/><rect x="14" y="8" width="16" height="26" rx="2" fill="#ff3d6e"/><path d="M19 15v12l9-6z" fill="#fff"/><circle cx="22" cy="37.5" r="1.6" fill="#ff3d6e"/></svg>
+    </span>
+    <span class="sc-text"><b>שורטס לילדים 🎬</b>גוללים סרטונים קצרים לילדים – אחד אחרי השני!</span>
+    <span class="sc-go" aria-hidden="true">←</span>
+  </a>
+
   <h2 class="games-title">המשחקים שלנו</h2>
   <section class="games">
+    <a class="game-card" href="tank3d.html" style="--tone:var(--grape)">
+      <span class="badge d3">חדש! 3D</span>
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#ece8ff"/><path d="M12 62 48 80 84 62 48 44Z" fill="#8b93b8"/><path d="M27 66 33 63M63 63 69 66" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M30 46 48 55V70L30 61Z" fill="#dfe6f5" stroke="#1a2350" stroke-width="2.5" stroke-linejoin="round"/><path d="M48 55 66 46V61L48 70Z" fill="#fff" stroke="#1a2350" stroke-width="2.5" stroke-linejoin="round"/><path d="M30 46 48 37 66 46 48 55Z" fill="#fff" stroke="#1a2350" stroke-width="2.5" stroke-linejoin="round"/><path d="M37 44.5 48 39 59 44.5 48 50Z" fill="#1a2350"/><path d="M48 63 66 54M30 55 48 64" stroke="#2f80ff" stroke-width="3"/><text x="48" y="29" text-anchor="middle" font-family="Fredoka, Rubik, Arial" font-weight="700" font-size="17" fill="#7a5cff">3D</text></svg>
+      <div><h3>טנק המבצעים 3D</h3><p>נוסעים בעיר בתלת־ממד, קופצים מעל מכשולים ואוספים מצוות.</p><span class="card-best" data-best="tank3d" hidden></span></div>
+    </a>
+    <a class="game-card" href="light.html" style="--tone:var(--sun-deep)">
+      <span class="badge">חדש!</span>
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#1d2360"/><circle cx="48" cy="68" r="22" fill="#ffd23f" opacity=".22"/><path d="M48 46V36M48 30V24" stroke="#fff3b0" stroke-width="3.5" stroke-linecap="round"/><g fill="#fff"><circle cx="35" cy="24" r="8"/><circle cx="46" cy="19" r="10"/><circle cx="58" cy="24" r="8"/><rect x="30" y="23" width="34" height="9" rx="4.5"/></g><g fill="#4a4f80"><circle cx="72" cy="44" r="6"/><circle cx="79" cy="40" r="7"/><rect x="68" y="43" width="18" height="7" rx="3.5"/></g><rect x="42" y="62" width="12" height="18" rx="3" fill="#fff"/><path d="M48 46c6 7 5 12 0 13-5-1-6-6 0-13z" fill="#ff9f1c"/><path d="M48 52c3 3.5 2.5 6 0 6.5-2.5-.5-3-3 0-6.5z" fill="#ffe066"/><rect x="36" y="79" width="24" height="5" rx="2" fill="#d9ad2b"/></svg>
+      <div><h3>האור מנצח</h3><p>משחק אקשן: שולחים קרני אור והופכים עננים חשוכים לאור.</p><span class="card-best" data-best="light" hidden></span></div>
+    </a>
+    <a class="game-card" href="tower.html" style="--tone:var(--teal)">
+      <span class="badge d3">חדש! 3D</span>
+      <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#e3f7f4"/><g stroke="#8a6d3b" stroke-width="2" stroke-linejoin="round"><path d="M26 62 48 73V82L26 71Z" fill="#d9c08f"/><path d="M48 73 70 62V71L48 82Z" fill="#c7a86e"/><path d="M26 62 48 51 70 62 48 73Z" fill="#f2e2bd"/><path d="M28 53 50 64V73L28 62Z" fill="#d9c08f"/><path d="M50 64 72 53V62L50 73Z" fill="#c7a86e"/><path d="M28 53 50 42 72 53 50 64Z" fill="#f2e2bd"/><path d="M25 44 47 55V64L25 53Z" fill="#e9b93f"/><path d="M47 55 69 44V53L47 64Z" fill="#d9a52c"/><path d="M25 44 47 33 69 44 47 55Z" fill="#f7d36b"/><path d="M29 35 49 45V54L29 44Z" fill="#d9c08f"/><path d="M49 45 69 35V44L49 54Z" fill="#c7a86e"/><path d="M29 35 49 25 69 35 49 45Z" fill="#f2e2bd"/></g></svg>
+      <div><h3>בונים את בית המקדש</h3><p>מניחים אבן על אבן בדיוק מושלם – כמה גבוה תגיעו?</p><span class="card-best" data-best="tower" hidden></span></div>
+    </a>
     <a class="game-card" href="tank.html" style="--tone:var(--ocean)">
       <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#e3f0ff"/><rect x="14" y="40" width="52" height="28" rx="6" fill="#fff" stroke="#1a2350" stroke-width="3"/><rect x="14" y="56" width="52" height="5" fill="#2f80ff"/><path d="M66 46h10l7 12v10H66z" fill="#fff" stroke="#1a2350" stroke-width="3" stroke-linejoin="round"/><rect x="20" y="30" width="40" height="10" rx="2" fill="#1a2350"/><circle cx="28" cy="70" r="7" fill="#1a2350"/><circle cx="72" cy="70" r="7" fill="#1a2350"/></svg>
-      <div><h3>טנק המבצעים</h3><p>נוסעים ברחוב, אוספים מצוות ונזהרים מהמכשולים.</p></div>
+      <div><h3>טנק המבצעים</h3><p>נוסעים ברחוב, אוספים מצוות ונזהרים מהמכשולים.</p><span class="card-best" data-best="tank" hidden></span></div>
     </a>
     <a class="game-card" href="memory.html" style="--tone:var(--grape)">
       <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#efeaff"/><rect x="18" y="22" width="34" height="46" rx="7" fill="#7a5cff" transform="rotate(-10 35 45)"/><rect x="44" y="26" width="34" height="46" rx="7" fill="#fff" stroke="#7a5cff" stroke-width="3" transform="rotate(8 61 49)"/><text x="61" y="58" text-anchor="middle" font-size="22">🕎</text></svg>
@@ -65,7 +91,7 @@
     </a>
     <a class="game-card" href="letters.html" style="--tone:var(--tomato)">
       <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#ffe9e3"/><ellipse cx="48" cy="40" rx="22" ry="26" fill="#ff6b4a"/><path d="M44 64h8l-4 6z" fill="#ff6b4a"/><path d="M48 70c-4 6 4 10 0 16" stroke="#1a2350" stroke-width="2" fill="none"/><text x="48" y="50" text-anchor="middle" fill="#fff" font-family="Fredoka, Rubik, Arial" font-weight="700" font-size="28">א</text></svg>
-      <div><h3>בלוני האותיות</h3><p>מפוצצים את הבלון עם האות הנכונה.</p></div>
+      <div><h3>בלוני האותיות</h3><p>מפוצצים את הבלון עם האות הנכונה – לפני שהשעון נגמר!</p><span class="card-best" data-best="letters" hidden></span></div>
     </a>
     <a class="game-card" href="quiz.html" style="--tone:var(--grass)">
       <svg viewBox="0 0 96 96" aria-hidden="true"><rect x="6" y="6" width="84" height="84" rx="22" fill="#e2f7ec"/><path d="M20 26h56a8 8 0 0 1 8 8v26a8 8 0 0 1-8 8H44l-14 12v-12H20a8 8 0 0 1-8-8V34a8 8 0 0 1 8-8z" fill="#2fb36d"/><text x="48" y="58" text-anchor="middle" fill="#fff" font-family="Fredoka, Rubik, Arial" font-weight="700" font-size="30">?</text></svg>
@@ -81,6 +107,39 @@
     </a>
   </section>
 
+  <section class="kcard records" id="records" aria-labelledby="records-title">
+    <h2 id="records-title">🏆 שוברי השיאים</h2>
+    <p class="sec-sub" style="margin:0">השיא של כל הזמנים בכל משחק. מצליחים לשבור אותו? בסוף כל משחק אפשר לשלוח את התוצאה לטבלה.</p>
+    <div class="rec-grid" id="rec-grid"></div>
+    <p class="rec-note" id="rec-note">הטבלה של כל הילדים מתעדכנת בערך כל 15 דקות.</p>
+  </section>
+
+  <section id="videos" hidden aria-labelledby="videos-title">
+    <h2 class="games-title" id="videos-title">סרטונים חדשים מערוצי הילדים 📺</h2>
+    <div id="vids-wrap">
+      <div class="vgrid" id="vgrid"></div>
+      <div class="more-row" id="more-videos-row" hidden><button class="kbtn white" id="more-videos" type="button" aria-expanded="false">עוד סרטונים</button></div>
+    </div>
+    <div id="arts-wrap" hidden>
+      <h3 class="games-title" id="arts-title" style="font-size:1.5rem;margin-top:26px">כתבות חדשות לילדים 📰</h3>
+      <div class="vgrid" id="agrid"></div>
+      <div class="more-row" id="more-arts-row" hidden><button class="kbtn white" id="more-arts" type="button" aria-expanded="false">עוד כתבות</button></div>
+    </div>
+  </section>
+
+  <section id="gallery" aria-labelledby="gallery-title">
+    <h2 class="games-title" id="gallery-title">היצירות שלכם 🎨</h2>
+    <div class="kcard submit-box">
+      <div>
+        <h3>שלחו לנו יצירה!</h3>
+        <p>בקשו מאבא או אמא לשלוח: ציור, סרטון, שיר או רעיון מעניין. היצירות עולות לאתר אחרי אישור.</p>
+        <span class="soon" id="submit-soon" hidden>שליחת היצירות תיפתח בקרוב!</span>
+      </div>
+      <a class="kbtn white" id="submit-btn" href="#gallery" target="_blank" rel="noopener" hidden>שלחו לנו יצירה ✉️</a>
+    </div>
+    <div class="ggrid" id="ggrid"><div class="gempty">טוענים את היצירות…</div></div>
+  </section>
+
   <section class="kcard fact" aria-live="polite">
     <svg class="bulb" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="26" r="18" fill="#ffd23f"/><rect x="24" y="42" width="16" height="10" rx="3" fill="#fff"/><rect x="26" y="53" width="12" height="5" rx="2" fill="#fff"/></svg>
     <div><h2>הידעתם?</h2><p id="fact"></p></div>
@@ -92,113 +151,14 @@
 
 <footer class="kfoot">כל המשחקים נבנו במיוחד לאתר. משחקים בכיף, ולא שוכחים לעזור בבית!</footer>
 
+<div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="צפייה" hidden>
+  <button class="lbx-close" id="lbx-close" type="button" aria-label="סגירה">✕</button>
+  <div class="lbx-body" id="lbx-body"></div>
+  <div class="lbx-cap" id="lbx-cap"></div>
+</div>
+
 <script src="../assets/common.js"></script>
-<script>
-(function () {
-  'use strict';
-  var S = window.Site;
-
-  // ---- חגים ותאריכים מיוחדים (לפי הלוח העברי)
-  var DAYS = [
-    { m: ['Tishri'], d: 1, n: 'ראש השנה' },
-    { m: ['Tishri'], d: 10, n: 'יום כיפור' },
-    { m: ['Tishri'], d: 15, n: 'סוכות' },
-    { m: ['Tishri'], d: 22, n: 'שמחת תורה' },
-    { m: ['Kislev'], d: 19, n: 'י״ט כסלו – ראש השנה לחסידות' },
-    { m: ['Kislev'], d: 25, n: 'חנוכה' },
-    { m: ['Shevat'], d: 10, n: 'י׳ שבט' },
-    { m: ['Shevat'], d: 15, n: 'ט״ו בשבט' },
-    { m: ['Adar', 'Adar II'], d: 14, n: 'פורים' },
-    { m: ['Nisan'], d: 11, n: 'י״א ניסן – יום ההולדת של הרבי' },
-    { m: ['Nisan'], d: 15, n: 'פסח' },
-    { m: ['Iyar'], d: 18, n: 'ל״ג בעומר' },
-    { m: ['Sivan'], d: 6, n: 'שבועות' },
-    { m: ['Tamuz'], d: 12, n: 'י״ב תמוז – חג הגאולה' },
-  ];
-
-  function nextDay() {
-    var fmt = new Intl.DateTimeFormat('en-u-ca-hebrew', { day: 'numeric', month: 'long' });
-    var base = new Date();
-    base.setHours(12, 0, 0, 0);
-    for (var k = 0; k < 400; k++) {
-      var d = new Date(base.getTime() + k * 86400000);
-      var parts = {};
-      fmt.formatToParts(d).forEach(function (p) { parts[p.type] = p.value; });
-      var day = parseInt(parts.day, 10);
-      for (var i = 0; i < DAYS.length; i++) {
-        if (DAYS[i].d === day && DAYS[i].m.indexOf(parts.month) >= 0) return { k: k, n: DAYS[i].n };
-      }
-    }
-    return null;
-  }
-
-  var MITZVOT = [
-    'לומר "מודה אני" מיד כשמתעוררים בבוקר.',
-    'לשים מטבע בקופת הצדקה לפני התפילה.',
-    'לברך לפני שאוכלים ושותים – ולהגיד ברכה בקול.',
-    'לעזור לאבא ולאמא בלי שיבקשו.',
-    'להגיד מילה טובה לחבר או לאח.',
-    'לנשק את המזוזה כשנכנסים הביתה.',
-    'לומר "שמע ישראל" לפני השינה.',
-    'ללמוד בעל פה פסוק אחד מ-12 הפסוקים.',
-    'לסדר את החדר ולשמור על הספרים הקדושים.',
-    'לשתף חבר במשחק או בממתק.',
-    'לבקש סליחה ממי שנפגע מאיתנו.',
-    'להכין משהו יפה לכבוד שבת.',
-    'לברך "שהכל" בשמחה לפני שתייה.',
-    'לעזור לסבא או לסבתא.',
-    'לתת צדקה גם מדמי הכיס שלנו.',
-    'לומר תודה – לה׳ ולאנשים שעוזרים לנו.',
-    'לקרוא פרק תהילים.',
-    'להגיד "בוקר טוב" בחיוך לכל המשפחה.',
-    'לשמור על הניקיון בבית הכנסת ובגן.',
-    'לקום לכבוד אדם מבוגר.',
-  ];
-
-  var FACTS = [
-    'חב״ד הן ראשי התיבות של חכמה, בינה ודעת.',
-    'הבניין המפורסם של חב״ד בניו יורק נמצא בכתובת 770 איסטרן פארקווי בברוקלין.',
-    'טנקי המבצעים הראשונים יצאו לרחובות ניו יורק בשנת תשל״ד (1974).',
-    'בספר תורה יש 304,805 אותיות, והסופר כותב כל אחת ביד.',
-    'בתורה יש 613 מצוות: 248 מצוות עשה ו-365 מצוות לא תעשה.',
-    'ארגון "צבאות ה׳" לילדים נוסד על ידי הרבי בשנת תש״מ (1980).',
-    'ספר התניא נדפס לראשונה בשנת תקנ״ז (1796) בעיר סלאוויטא.',
-    'בי״ט כסלו יצא אדמו״ר הזקן לחופשי מהכלא בפטרבורג, ולכן הוא נקרא "ראש השנה לחסידות".',
-    'שלוחי חב״ד פועלים ביותר מ-100 מדינות בעולם.',
-    'כפר חב״ד הוקם בשנת תש״ט (1949).',
-    'ה"חת״ת" הוא שיעור יומי: חומש, תהילים ותניא.',
-    'בכל שנה מתכנסים אלפי שלוחים בניו יורק ל"כינוס השלוחים", ומצטלמים יחד מול 770.',
-    'הרבי נולד בי״א ניסן תרס״ב (1902) בעיר ניקולאייב.',
-    'במבצע חנוכה של הרבי מדליקים חנוכיות ענק ברחובות ובכיכרות בכל העולם.',
-    'המילה "ליובאוויטש" באה מהמילה הרוסית לאהבה, ולכן קוראים לה "עיר האהבה".',
-    'בחנוכייה של הרבי הקנים ישרים ואלכסוניים, לפי ציור של הרמב״ם.',
-    'הרבי ביקש שבחדר של כל ילד יהיו קופת צדקה, סידור וחומש – כך החדר הופך ל"מקדש מעט".',
-  ];
-
-  // ---- היום
-  document.getElementById('heb-today').textContent = 'היום: ' + S.hebDate() + ' · ' + S.gregDate();
-  var nd = nextDay();
-  if (nd) {
-    var num = document.getElementById('count-num'), txt = document.getElementById('count-text');
-    if (nd.k === 0) { num.textContent = '🎉'; txt.innerHTML = '<b>' + S.esc(nd.n) + '</b>היום!'; }
-    else if (nd.k === 1) { num.textContent = '1'; txt.innerHTML = 'עוד יום אחד עד<b>' + S.esc(nd.n) + '</b>מחר!'; }
-    else { num.textContent = nd.k; txt.innerHTML = 'ימים נשארו עד<b>' + S.esc(nd.n) + '</b>'; }
-  }
-  var dayIndex = Math.floor(Date.now() / 86400000);
-  document.getElementById('mitzvah').textContent = MITZVOT[dayIndex % MITZVOT.length];
-
-  var fi = Math.floor(Math.random() * FACTS.length);
-  function showFact() { document.getElementById('fact').textContent = FACTS[fi % FACTS.length]; fi++; }
-  showFact();
-  document.getElementById('next-fact').addEventListener('click', showFact);
-
-  // ---- פרסומות לאיזור הילדים (אם הוגדרו בניהול)
-  S.getJSON('../data/content.json').then(function (c) {
-    c = S.normContent(c);
-    var ads = S.activeAds(c, 'kids');
-    document.getElementById('kids-ads').innerHTML = ads.map(function (a) { return S.adHTML(a, '../'); }).join('');
-  }, function () {});
-})();
-</script>
+<script src="leaderboard.js"></script>
+<script src="hub.js"></script>
 </body>
 </html>

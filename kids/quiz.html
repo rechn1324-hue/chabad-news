@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>החידון הגדול · איזור הילדים</title>
+<meta name="description" content="חידון על חגים, מצוות וחסידות חב״ד – לקטנים ולגדולים. עונים נכון ומהר ושוברים את השיא של כולם!">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,30 +13,35 @@
 <link rel="stylesheet" href="kids.css">
 <style>
   .qbox { max-width: 680px; margin: 0 auto; }
-  .qcard { background: #fff; border-radius: 26px; box-shadow: var(--lift); padding: 26px; }
-  .progress { height: 12px; background: var(--sky-2); border-radius: 999px; overflow: hidden; margin-bottom: 18px; }
+  .qcard { background: #fff; border-radius: 26px; box-shadow: var(--lift); padding: 22px; }
+  @media (max-width: 520px) { .qcard { padding: 18px 14px; } .game-main { padding-top: 12px; } }
+  .progress { height: 12px; background: var(--sky-2); border-radius: 999px; overflow: hidden; margin-bottom: 14px; }
   .progress span { display: block; height: 100%; background: var(--grass); border-radius: 999px; transition: width .3s; }
-  .qnum { color: var(--ink-2); font-weight: 600; margin: 0 0 6px; }
-  .qtext { font-family: var(--font-fun); font-weight: 600; font-size: clamp(1.4rem, 1.1rem + 1.2vw, 1.9rem); line-height: 1.25; margin: 0 0 18px; }
+  .qnum { color: var(--ink-2); font-weight: 600; margin: 0 0 6px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .qnum b { color: var(--tomato); font-family: var(--font-fun); }
+  .speed { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; font-size: .9rem; font-weight: 600; color: var(--ink-2); }
+  .speed .bar { flex: 1; height: 8px; background: var(--sky); border-radius: 999px; overflow: hidden; }
+  .speed .bar span { display: block; height: 100%; width: 100%; background: var(--sun); border-radius: 999px; }
+  .qtext { font-family: var(--font-fun); font-weight: 600; font-size: clamp(1.35rem, 1.1rem + 1.2vw, 1.9rem); line-height: 1.25; margin: 0 0 16px; }
   .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-  @media (max-width: 520px) { .opts { grid-template-columns: minmax(0, 1fr); } }
-  .opt { border: 3px solid var(--line); background: #fff; border-radius: 18px; padding: 14px 16px; font-size: 1.12rem; font-weight: 600; cursor: pointer; text-align: start; line-height: 1.3; box-shadow: var(--press); }
+  @media (max-width: 520px) { .opts { grid-template-columns: minmax(0, 1fr); gap: 10px; } }
+  .opt { border: 3px solid var(--line); background: #fff; border-radius: 18px; padding: 13px 16px; font-size: 1.12rem; font-weight: 600; cursor: pointer; text-align: start; line-height: 1.3; box-shadow: var(--press); }
   .opt:hover:not([disabled]) { border-color: var(--ocean); }
   .opt.right { border-color: var(--good); background: #e5f8ec; }
   .opt.wrong { border-color: var(--bad); background: #fdeaea; }
   .opt[disabled] { cursor: default; }
-  .explain { margin-top: 16px; padding: 14px 16px; border-radius: 16px; background: var(--sky); font-size: 1.05rem; }
+  .explain { margin-top: 14px; padding: 14px 16px; border-radius: 16px; background: var(--sky); font-size: 1.05rem; }
   .explain b { font-family: var(--font-fun); font-size: 1.2rem; }
-  .next-row { display: flex; justify-content: flex-end; margin-top: 16px; }
+  .explain .pts { display: inline-block; margin-inline-start: 6px; color: var(--good); font-family: var(--font-fun); font-weight: 700; }
+  .next-row { display: flex; justify-content: flex-end; margin-top: 14px; }
   .levels { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 18px; }
   @media (max-width: 520px) { .levels { grid-template-columns: minmax(0, 1fr); } }
-  .level { border: 0; border-radius: 22px; padding: 20px; cursor: pointer; text-align: start; box-shadow: var(--press); color: #fff; }
+  .level { border: 0; border-radius: 22px; padding: 20px; cursor: pointer; text-align: start; box-shadow: var(--press); color: #fff; line-height: 1.45; }
   .level b { font-family: var(--font-fun); font-size: 1.6rem; display: block; }
+  .level small { display: block; margin-top: 6px; font-size: .92rem; opacity: .95; }
   .level.small { background: var(--ocean); }
   .level.big { background: var(--grape); }
-  .result { text-align: center; }
-  .result h2 { font-family: var(--font-fun); font-size: 2.2rem; margin: 0 0 6px; }
-  .result .score { font-family: var(--font-fun); font-weight: 700; font-size: 3.4rem; color: var(--tomato); }
+  .rules { margin: 6px 0 0; color: var(--ink-2); }
 </style>
 </head>
 <body>
@@ -52,10 +58,11 @@
 </main>
 
 <script src="kids.js"></script>
+<script src="leaderboard.js"></script>
 <script>
 (function () {
   'use strict';
-  var K = window.Kids;
+  var K = window.Kids, B = window.Board;
   // בכל שאלה התשובה הנכונה היא הראשונה ברשימה (הסדר מעורבב במשחק)
   var BANK = {
     small: [
@@ -108,37 +115,65 @@
       ['למה נתן הרבי דולר לכל אחד בימי ראשון?', ['כדי שייתנו אותו לצדקה', 'כמתנת יום הולדת', 'כדי לקנות ממתקים', 'כמזכרת בלבד'], 'כך כל מפגש עם הרבי הוביל למצווה של צדקה.'],
     ],
   };
-  var ROUND = 10;
+  var ROUND = 10, BASE_PTS = 100, SPEED_PTS = 50, SPEED_SECS = 15;
+  var IN_NAMES = { small: 'בחידון לקטנים', big: 'בחידון לגדולים' };
   var app = document.getElementById('app');
-  var st = null;
+  var st = null, speedTimer = 0;
 
+  function gameId(level) { return 'quiz-' + level; }
   function menu() {
-    var best = K.load('quiz-best', {});
+    stopSpeed();
+    st = null;
     app.innerHTML = '<div class="qcard"><h2 class="qtext" style="margin-bottom:6px">בחרו חידון</h2>' +
-      '<p style="margin:0;color:var(--ink-2)">10 שאלות בכל סיבוב. אחרי כל תשובה תלמדו משהו חדש.</p>' +
-      '<div class="levels"><button class="level small" data-level="small" type="button"><b>לקטנים</b>חגים, מצוות ושבת' + (best.small != null ? '<br>השיא שלכם: ' + best.small + '/10' : '') + '</button>' +
-      '<button class="level big" data-level="big" type="button"><b>לגדולים</b>חסידות חב״ד, הרבי והיסטוריה' + (best.big != null ? '<br>השיא שלכם: ' + best.big + '/10' : '') + '</button></div></div>';
+      '<p class="rules">10 שאלות בכל סיבוב. על כל תשובה נכונה מקבלים 100 נקודות, ועוד עד 50 נקודות בונוס אם עונים מהר. אחרי כל תשובה לומדים משהו חדש!</p>' +
+      '<div class="levels"><button class="level small" data-level="small" type="button"><b>לקטנים</b>חגים, מצוות ושבת<small id="rec-small"></small></button>' +
+      '<button class="level big" data-level="big" type="button"><b>לגדולים</b>חסידות חב״ד, הרבי והיסטוריה<small id="rec-big"></small></button></div></div>';
+    B.startLine(gameId('small'), document.getElementById('rec-small'));
+    B.startLine(gameId('big'), document.getElementById('rec-big'));
   }
 
   function startLevel(level) {
     K.audio();
+    B.close();
     var qs = K.shuffle(BANK[level]).slice(0, ROUND).map(function (q) {
       return { q: q[0], right: q[1][0], opts: K.shuffle(q[1]), ex: q[2] };
     });
-    st = { level: level, qs: qs, i: 0, score: 0 };
+    st = { level: level, qs: qs, i: 0, correct: 0, points: 0, answered: false, t0: 0, hiddenAt: 0 };
     show();
+    window.scrollTo(0, 0);
   }
+
+  // ---- בונוס מהירות (נעצר כשהחלון מוסתר)
+  function elapsed() { return st ? ((st.hiddenAt || performance.now()) - st.t0) / 1000 : 0; }
+  function bonusNow() { return Math.round(SPEED_PTS * Math.max(0, 1 - elapsed() / SPEED_SECS)); }
+  function paintSpeed() {
+    var bar = document.getElementById('speed-bar');
+    if (!bar || !st) return;
+    var left = Math.max(0, 1 - elapsed() / SPEED_SECS);
+    bar.style.width = (left * 100).toFixed(1) + '%';
+  }
+  function stopSpeed() { clearInterval(speedTimer); speedTimer = 0; }
 
   function show() {
     var q = st.qs[st.i];
+    st.answered = false;
     app.innerHTML = '<div class="qcard"><div class="progress"><span style="width:' + (st.i / ROUND * 100) + '%"></span></div>' +
-      '<p class="qnum">שאלה ' + (st.i + 1) + ' מתוך ' + ROUND + ' · ⭐ ' + st.score + '</p>' +
+      '<p class="qnum"><span>שאלה ' + (st.i + 1) + ' מתוך ' + ROUND + '</span><span>⭐ <b>' + K.fmt(st.points) + '</b> נקודות</span></p>' +
+      '<div class="speed" aria-hidden="true">⚡ בונוס מהירות<span class="bar"><span id="speed-bar"></span></span></div>' +
       '<h2 class="qtext">' + q.q + '</h2><div class="opts">' +
       q.opts.map(function (o, k) { return '<button class="opt" type="button" data-k="' + k + '">' + o + '</button>'; }).join('') +
-      '</div><div id="after"></div></div>';
+      '</div><div id="after" aria-live="polite"></div></div>';
+    st.t0 = performance.now();
+    st.hiddenAt = 0;
+    stopSpeed();
+    speedTimer = setInterval(paintSpeed, 200);
+    paintSpeed();
   }
 
   function answer(k) {
+    if (!st || st.answered) return;
+    st.answered = true;
+    stopSpeed();
     var q = st.qs[st.i];
     var buttons = app.querySelectorAll('.opt');
     var ok = q.opts[k] === q.right;
@@ -147,31 +182,52 @@
       if (q.opts[j] === q.right) b.classList.add('right');
       else if (j === k) b.classList.add('wrong');
     });
-    if (ok) { st.score++; K.sfx.good(); } else K.sfx.bad();
+    var gained = 0, bonus = 0;
+    if (ok) { bonus = bonusNow(); gained = BASE_PTS + bonus; st.correct++; st.points += gained; K.sfx.good(); } else K.sfx.bad();
     var last = st.i === ROUND - 1;
-    document.getElementById('after').innerHTML = '<div class="explain"><b>' + (ok ? 'נכון! ' : 'כמעט! ') + '</b>' + q.ex + '</div>' +
+    document.getElementById('after').innerHTML = '<div class="explain"><b>' + (ok ? 'נכון! ' : 'כמעט! ') + '</b>' +
+      (ok ? '<span class="pts">' + K.ltr('+' + gained) + (bonus ? ' (⚡' + bonus + ')' : '') + '</span> ' : '') + q.ex + '</div>' +
       '<div class="next-row"><button class="kbtn green" id="next" type="button">' + (last ? 'לתוצאות' : 'לשאלה הבאה ←') + '</button></div>';
-    document.getElementById('next').focus();
+    document.querySelector('.qnum b').textContent = K.fmt(st.points);
+    try { document.getElementById('next').focus({ preventScroll: true }); } catch (e) { document.getElementById('next').focus(); }
+    document.getElementById('next').scrollIntoView({ block: 'nearest', behavior: K.reduced() ? 'auto' : 'smooth' });
   }
 
   function result() {
-    var best = K.load('quiz-best', {});
-    if (best[st.level] == null || st.score > best[st.level]) { best[st.level] = st.score; K.save('quiz-best', best); }
-    var stars = st.score >= 9 ? 3 : st.score >= 6 ? 2 : 1;
-    var msg = st.score === 10 ? 'מושלם! אתם אלופי החידון!' : st.score >= 7 ? 'יישר כוח! ידע מרשים!' : st.score >= 4 ? 'יפה מאוד! עוד סיבוב ותהיו מומחים.' : 'כל הכבוד על הניסיון! עכשיו אתם כבר יודעים יותר.';
-    app.innerHTML = '<div class="qcard result"><h2>' + msg + '</h2><div class="score">' + st.score + '/10</div><div class="stars">' + '⭐'.repeat(stars) + '</div>' +
-      '<div class="choice-row" style="margin-top:14px"><button class="kbtn green" data-level="' + st.level + '" type="button">עוד סיבוב</button>' +
-      '<button class="kbtn white" id="to-menu" type="button">בחירת חידון</button></div></div>';
-    if (st.score >= 7) { K.sfx.win(); K.confetti(); }
+    stopSpeed();
+    var level = st.level, pts = st.points, correct = st.correct;
+    var stars = correct >= 9 ? 3 : correct >= 6 ? 2 : 1;
+    var msg = correct === 10 ? 'מושלם! אתם אלופי החידון!' : correct >= 7 ? 'יישר כוח! ידע מרשים!' : correct >= 4 ? 'יפה מאוד! עוד סיבוב ותהיו מומחים.' : 'כל הכבוד על הניסיון!';
+    var isNew = pts > B.best(gameId(level));
+    if (isNew) msg = 'שיא חדש! ' + msg;
+    else if (correct >= 7) K.sfx.win(); // בשיא חדש לוח השיאים כבר חוגג עם קונפטי
+    menu();
+    B.showResult({
+      game: gameId(level), score: pts, unit: 'נקודות', title: msg,
+      text: 'עניתם נכון על ' + correct + ' מתוך ' + ROUND + ' שאלות ' + IN_NAMES[level] + '.',
+      stars: stars,
+      onAgain: function () { startLevel(level); },
+      extra: [{ label: 'בחירת חידון', onClick: menu }],
+    });
   }
 
   app.addEventListener('click', function (e) {
-    var t = e.target.closest('[data-level],.opt,#next,#to-menu');
+    var t = e.target.closest('[data-level],.opt,#next');
     if (!t) return;
     if (t.dataset.level) startLevel(t.dataset.level);
     else if (t.classList.contains('opt')) answer(+t.dataset.k);
-    else if (t.id === 'next') { st.i++; if (st.i >= ROUND) result(); else show(); }
-    else if (t.id === 'to-menu') menu();
+    else if (t.id === 'next') { st.i++; if (st.i >= ROUND) result(); else { show(); window.scrollTo(0, 0); } }
+  });
+  // מקלדת: 1–4 לבחירת תשובה
+  document.addEventListener('keydown', function (e) {
+    if (B.isOpen() || K.typing(e) || !st || st.answered) return;
+    var n = parseInt(e.key, 10);
+    if (n >= 1 && n <= 4) { answer(n - 1); e.preventDefault(); }
+  });
+  document.addEventListener('visibilitychange', function () {
+    if (!st || st.answered) return;
+    if (document.hidden) st.hiddenAt = performance.now();
+    else if (st.hiddenAt) { st.t0 += performance.now() - st.hiddenAt; st.hiddenAt = 0; }
   });
   menu();
 })();

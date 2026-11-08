@@ -14,7 +14,15 @@
   .levels { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
   .levels .kbtn[aria-pressed="true"] { background: var(--grape); color: #fff; }
   .board { display: grid; gap: 12px; max-width: 760px; margin: 0 auto; perspective: 900px; }
-  .card { position: relative; aspect-ratio: 3 / 4; border: 0; padding: 0; background: none; cursor: pointer; border-radius: 18px; }
+  .card { position: relative; aspect-ratio: var(--ar, 3 / 4); border: 0; padding: 0; background: none; cursor: pointer; border-radius: 18px; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+  @media (max-width: 520px) {
+    .board { gap: 8px; }
+    .levels { gap: 6px; flex-wrap: nowrap; }
+    .levels .kbtn { font-size: .9rem; padding: 8px 9px; white-space: nowrap; }
+    .game-main { padding-block: 12px 24px; }
+    .hud { margin-bottom: 8px; }
+  }
+  .best-line { text-align: center; color: var(--ink-2); font-weight: 600; margin: -4px 0 10px; min-height: 1.5em; }
   .card .in { position: absolute; inset: 0; transition: transform .4s; transform-style: preserve-3d; border-radius: 18px; }
   .card.open .in, .card.done .in { transform: rotateY(180deg); }
   .face, .back { position: absolute; inset: 0; border-radius: 18px; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; box-shadow: var(--press); }
@@ -50,6 +58,7 @@
     <span class="chip">זוגות: <b id="found">0</b>/<span id="total">6</span></span>
     <span class="chip">זמן: <b id="time">0:00</b></span>
   </div>
+  <p class="best-line" id="best-line"></p>
   <div class="wrap-rel">
     <div class="board" id="board"></div>
     <div class="overlay" id="win" hidden>
@@ -91,18 +100,28 @@
   ];
 
   var board = document.getElementById('board');
-  var pairs = 6, open = [], moves = 0, found = 0, lock = false, t0 = 0, timer = 0;
+  var pairs = K.load('memory-pairs', 6), open = [], moves = 0, found = 0, lock = false, t0 = 0, timer = 0, hiddenAt = 0;
+  if ([6, 8, 12].indexOf(pairs) < 0) pairs = 6;
 
   function cols(n) { var w = innerWidth; if (n <= 12) return w < 520 ? 3 : 4; if (n <= 16) return 4; return w < 520 ? 4 : 6; }
   function layout(n) {
-    var c = cols(n);
+    var c = cols(n), phone = innerWidth < 520;
     board.style.gridTemplateColumns = 'repeat(' + c + ', minmax(0, 1fr))';
     board.style.maxWidth = (c * 124 + (c - 1) * 12) + 'px';
+    // בטלפון, ברמה הקשה, קלפים קצת יותר נמוכים – כדי שכל הלוח ייכנס במסך
+    board.style.setProperty('--ar', phone && n > 16 ? '1 / 1.12' : '3 / 4');
+  }
+  function bestMoves() { var b = K.load('memory-best', {}); return b && b[pairs] ? b[pairs] : 0; }
+  function paintBest() {
+    var b = bestMoves();
+    document.getElementById('best-line').textContent = b ? 'השיא שלכם ברמה הזו: ' + b + ' צעדים' : 'מצאו את כל הזוגות בכמה שפחות צעדים!';
   }
 
   function deal() {
     clearInterval(timer);
-    open = []; moves = 0; found = 0; lock = false; t0 = 0;
+    open = []; moves = 0; found = 0; lock = false; t0 = 0; hiddenAt = 0;
+    paintBest();
+    document.querySelectorAll('.levels [data-pairs]').forEach(function (x) { x.setAttribute('aria-pressed', String(+x.dataset.pairs === pairs)); });
     document.getElementById('moves').textContent = 0;
     document.getElementById('found').textContent = 0;
     document.getElementById('total').textContent = pairs;
@@ -152,8 +171,12 @@
   function win() {
     clearInterval(timer);
     var stars = moves <= pairs * 1.6 ? 3 : moves <= pairs * 2.3 ? 2 : 1;
+    var prev = bestMoves(), isBest = !prev || moves < prev;
+    if (isBest) { var all = K.load('memory-best', {}) || {}; all[pairs] = moves; K.save('memory-best', all); }
     document.getElementById('stars').textContent = '⭐'.repeat(stars);
-    document.getElementById('win-text').textContent = 'עשיתם את זה ב-' + moves + ' צעדים ובזמן ' + document.getElementById('time').textContent + '.';
+    document.getElementById('win-text').textContent = 'עשיתם את זה ב-' + moves + ' צעדים ובזמן ' + document.getElementById('time').textContent + '.' +
+      (isBest ? (prev ? ' שיא חדש! (קודם: ' + prev + ')' : '') : ' השיא שלכם: ' + prev + ' צעדים.');
+    paintBest();
     document.getElementById('win').hidden = false;
     K.sfx.win();
     K.confetti();
@@ -163,11 +186,17 @@
     var b = e.target.closest('[data-pairs]');
     if (!b) return;
     pairs = +b.dataset.pairs;
-    document.querySelectorAll('.levels [data-pairs]').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+    K.save('memory-pairs', pairs);
     deal();
   });
   document.getElementById('again').addEventListener('click', deal);
   window.addEventListener('resize', function () { layout(pairs * 2); });
+  // השעון נעצר כשעוברים לחלון אחר
+  document.addEventListener('visibilitychange', function () {
+    if (!t0 || found === pairs) return;
+    if (document.hidden) { hiddenAt = Date.now(); clearInterval(timer); }
+    else if (hiddenAt) { t0 += Date.now() - hiddenAt; hiddenAt = 0; timer = setInterval(tick, 1000); tick(); }
+  });
   deal();
 })();
 </script>

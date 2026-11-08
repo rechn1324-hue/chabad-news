@@ -8,7 +8,7 @@
   var CONTENT_PATH = 'data/content.json';
   var CAT_NAMES = { chabad: 'חב״ד', israel: 'ישראל ופוליטיקה', world: 'עולם', flash: 'מבזקים', video: 'וידאו', community: 'שמחות וקהילה', kids: 'ילדים' };
   var FILTER_NAMES = { women: 'כתבות על נשים ובנות', weather: 'מזג אוויר', sports: 'ספורט', gossip: 'רכילות ובידור', lifestyle: 'בריאות, מתכונים ולייפסטייל', markets: 'בורסה וכסף', promo: 'תוכן שיווקי' };
-  var GAME_NAMES = { tank: 'טנק המבצעים', letters: 'בלוני האותיות', 'quiz-small': 'החידון – קטנים', 'quiz-big': 'החידון – גדולים' };
+  var GAME_NAMES = { tank: 'טנק המבצעים', tank3d: 'טנק המבצעים 3D', light: 'האור מנצח', tower: 'בונים את בית המקדש', letters: 'בלוני האותיות', 'quiz-small': 'החידון – קטנים', 'quiz-big': 'החידון – גדולים' };
   var PLACEMENTS = {
     top: { name: 'באנר בראש האתר', size: 'מומלץ: 1200×150' },
     feed: { name: 'בין החדשות', size: 'מומלץ: 900×250' },

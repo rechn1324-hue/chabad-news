@@ -23,7 +23,15 @@
   .pot b { font-family: var(--font-fun); font-size: 1.6rem; display: block; }
   .letters-help { font-size: .95rem; line-height: 1.6; background: rgba(255,255,255,.12); border-radius: 16px; padding: 10px 14px; }
   .letters-help b { font-family: var(--font-fun); font-size: 1.2rem; }
-  @media (max-width: 640px) { .spin-area { grid-template-columns: minmax(0, 1fr); } .letters-help { order: 3; } }
+  @media (max-width: 640px) {
+    .table { padding: 16px 12px 20px; }
+    .spin-area { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
+    .letters-help { order: 3; grid-column: 1 / -1; }
+    .dreidel-box { height: 190px; }
+    #dreidel { width: 124px; height: 182px; }
+    .game-main { padding-top: 12px; }
+  }
+  .dreidel-box { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
   .msg { text-align: center; font-family: var(--font-fun); font-weight: 600; font-size: 1.45rem; min-height: 2.2em; margin: 10px 0; }
   .players { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 6px; }
   .player { background: rgba(255,255,255,.14); border-radius: 18px; padding: 10px; text-align: center; border: 3px solid transparent; }
@@ -178,7 +186,18 @@
     if (meWin) { K.sfx.win(); K.confetti(); }
   }
 
-  $('spin').addEventListener('click', function () { K.audio(); play(); });
+  function mySpin() {
+    if (spinning || !g || g.turn !== 0 || g.players[0].c <= 0 || !$('end').hidden) return;
+    K.audio(); play();
+  }
+  $('spin').addEventListener('click', mySpin);
+  // אפשר גם לגעת בסביבון עצמו, או ללחוץ רווח
+  document.querySelector('.dreidel-box').addEventListener('click', mySpin);
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== ' ' || (e.target && (e.target.tagName === 'BUTTON' || K.typing(e)))) return;
+    e.preventDefault();
+    mySpin();
+  });
   $('again').addEventListener('click', newGame);
   document.querySelector('.where').addEventListener('click', function (e) {
     var b = e.target.closest('[data-where]');

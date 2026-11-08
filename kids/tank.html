@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>טנק המבצעים · איזור הילדים</title>
+<meta name="description" content="נוהגים בטנק המבצעים, אוספים מצוות ונזהרים מהמכשולים – ומנסים לשבור את השיא של כולם!">
 <meta name="theme-color" content="#ffffff">
 <link rel="icon" href="../assets/icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,16 +12,12 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Rubik:wght@400;500;600;700&display=swap">
 <link rel="stylesheet" href="kids.css">
 <style>
-  .stage { position: relative; width: min(100%, 480px); margin: 0 auto; height: min(72vh, 680px); min-height: 420px; border-radius: 24px; overflow: hidden; box-shadow: var(--lift); background: #8fd16a; touch-action: none; user-select: none; -webkit-user-select: none; }
-  .stage canvas { display: block; width: 100%; height: 100%; }
-  .pad { direction: ltr; display: flex; justify-content: center; gap: 18px; margin-top: 16px; }
-  .pad .kbtn { width: 110px; height: 70px; font-size: 2rem; padding: 0; }
+  .stage { width: min(100%, 480px); background: #8fd16a; }
   .legend { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 16px; margin: 4px 0 6px; font-size: .98rem; }
   .legend span { white-space: nowrap; }
-  .best { color: var(--ink-2); font-weight: 600; }
 </style>
 </head>
-<body>
+<body class="play">
 <header class="kbar">
   <div class="kwrap kbar-row">
     <a class="kback" href="./">→ כל המשחקים</a>
@@ -33,7 +30,8 @@
   <div class="hud">
     <span class="chip">מצוות: <b id="score">0</b></span>
     <span class="chip">שלב <b id="level">1</b></span>
-    <span class="chip" id="lives" aria-label="חיים">❤️❤️❤️</span>
+    <span class="chip" id="lives" role="img" aria-label="3 חיים">❤️❤️❤️</span>
+    <button class="chip" id="pause-btn" type="button" aria-label="הפסקה">⏸</button>
   </div>
 
   <div class="stage" id="stage">
@@ -42,16 +40,9 @@
       <h2>יוצאים למבצעים!</h2>
       <p>נוהגים בטנק המבצעים ברחוב: אוספים כמה שיותר מצוות, ונזהרים מקונוסים, ממחסומים ומשלוליות.</p>
       <div class="legend"><span>✔ נרות שבת</span><span>✔ תפילין</span><span>✔ צדקה</span><span>✔ מזוזה</span><span>✔ סידור</span></div>
-      <p>במחשב: חיצים ימינה ושמאלה. בטלפון: נוגעים בצד שאליו רוצים לנסוע.</p>
+      <p class="how">בטלפון: נוגעים בצד שאליו רוצים לנסוע (או בכפתורים למטה). במחשב: חיצים ימינה ושמאלה.</p>
       <button class="kbtn blue" id="start" type="button">יוצאים לדרך!</button>
-      <p class="best" id="best-start"></p>
-    </div>
-    <div class="overlay" id="ov-over" hidden>
-      <h2 id="over-title">כל הכבוד!</h2>
-      <p id="over-text"></p>
-      <div class="stars" id="over-stars"></div>
-      <button class="kbtn blue" id="again" type="button">עוד סיבוב</button>
-      <p class="best" id="best-over"></p>
+      <p class="records-line" id="best-start"></p>
     </div>
     <div class="overlay" id="ov-pause" hidden>
       <h2>הפסקה קטנה</h2>
@@ -66,10 +57,11 @@
 </main>
 
 <script src="kids.js"></script>
+<script src="leaderboard.js"></script>
 <script>
 (function () {
   'use strict';
-  var K = window.Kids;
+  var K = window.Kids, B = window.Board;
   var stage = document.getElementById('stage');
   var cv = document.getElementById('cv');
   var g = cv.getContext('2d');
@@ -89,19 +81,20 @@
   var W = 0, H = 0, dpr = 1, roadX = 0, roadW = 0, laneW = 0;
   var s = null;           // מצב המשחק
   var raf = 0, last = 0;
-  var best = K.load('tank-best', 0);
 
   function resize() {
     var r = stage.getBoundingClientRect();
+    if (!r.width || !r.height) return;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     W = r.width; H = r.height;
-    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    var nw = Math.round(W * dpr), nh = Math.round(H * dpr);
+    if (cv.width !== nw || cv.height !== nh) { cv.width = nw; cv.height = nh; } // שינוי גודל מנקה את הקנבס
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     roadW = Math.min(W * 0.8, 400);
     roadX = (W - roadW) / 2;
     laneW = roadW / LANES;
     if (s) s.px = laneX(s.lane);
-    if (!s || !s.running) draw(0);
+    draw(); // מציירים מיד – שלא יהבהב פריים ריק
   }
   function laneX(l) { return roadX + laneW * (l + 0.5); }
 
@@ -135,6 +128,7 @@
     $('score').textContent = s.score;
     $('level').textContent = s.level;
     $('lives').textContent = s.lives > 0 ? '❤️'.repeat(s.lives) + '🤍'.repeat(3 - s.lives) : '🤍🤍🤍';
+    $('lives').setAttribute('aria-label', Math.max(0, s.lives) + ' חיים');
   }
 
   function float(text, x, y, color, big) { s.floats.push({ text: text, x: x, y: y, c: color, t: 0, big: !!big }); }
@@ -149,7 +143,7 @@
     s.spawn -= dt;
     if (s.spawn <= 0) { spawn(); s.spawn = spawnEvery() * (0.8 + Math.random() * 0.5); }
 
-    var tw = laneW * 0.6, th = laneW * 1.05, ty = H - th * 0.75;
+    var th = laneW * 1.05, ty = H - th * 0.75;
     for (var i = s.ents.length - 1; i >= 0; i--) {
       var e = s.ents[i];
       e.y += v * dt;
@@ -160,14 +154,14 @@
         if (e.good) {
           s.score++;
           K.sfx.good();
-          float('+1 ' + e.k.n, ex, e.y, '#1f9d55');
+          float(K.ltr('+1') + ' ' + e.k.n, ex, e.y, '#1f9d55');
           var lvl = 1 + Math.floor(s.score / 10);
           if (lvl > s.level) { s.level = lvl; K.sfx.win(); float('שלב ' + lvl + '!', W / 2, H * 0.4, '#2f80ff', true); }
           s.ents.splice(i, 1);
         } else if (s.inv <= 0) {
           s.lives--;
-          s.inv = 1.3; s.shake = 0.3;
-          K.sfx.bad();
+          s.inv = 1.3; s.shake = K.reduced() ? 0 : 0.3;
+          K.sfx.bad(); K.vibrate(80);
           float('אוי!', ex, e.y, '#e5484d');
           if (s.lives <= 0) { updateHud(); return gameOver(); }
         }
@@ -291,7 +285,8 @@
     g.restore();
   }
 
-  function draw(dt) {
+  function draw() {
+    if (!W) return;
     var shake = s && s.shake > 0 ? (Math.random() - 0.5) * 8 : 0;
     g.save(); g.translate(shake, 0);
     drawWorld(s ? s.scroll : 0);
@@ -320,34 +315,41 @@
     var dt = Math.min(0.05, (now - last) / 1000 || 0);
     last = now;
     if (s && s.running) step(dt);
-    draw(dt);
+    draw();
     if (s && s.running) raf = requestAnimationFrame(loop);
   }
 
   function start() {
     K.audio();
+    B.close();
+    K.unfocus();
     newGame();
-    $('ov-start').hidden = true; $('ov-over').hidden = true; $('ov-pause').hidden = true;
+    $('ov-start').hidden = true; $('ov-pause').hidden = true;
     last = performance.now();
     cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
   }
 
   function gameOver() {
-    s.running = false;
-    var record = s.score > best;
-    if (record) { best = s.score; K.save('tank-best', best); }
-    $('over-title').textContent = record && s.score > 0 ? 'שיא חדש!' : K.pick(CHEERS);
-    $('over-text').textContent = 'אספתם ' + s.score + ' מצוות והגעתם לשלב ' + s.level + '.';
-    $('over-stars').textContent = s.score >= 30 ? '⭐⭐⭐' : s.score >= 15 ? '⭐⭐' : '⭐';
-    $('best-over').textContent = 'השיא שלכם: ' + best;
-    $('ov-over').hidden = false;
-    if (record && s.score > 0) { K.sfx.win(); K.confetti(); }
+    s.running = false; s.over = true;
+    var sc = s.score, lvl = s.level;
+    var isNew = sc > B.best('tank');
+    setTimeout(function () {
+      B.showResult({
+        game: 'tank', score: sc, unit: 'מצוות',
+        title: isNew ? 'שיא חדש!' : sc > 0 ? K.pick(CHEERS) : 'אוי! עוד ניסיון?',
+        text: 'אספתם ' + sc + ' מצוות והגעתם לשלב ' + lvl + '.',
+        stars: sc >= 30 ? 3 : sc >= 15 ? 2 : 1,
+        onAgain: start,
+      });
+      B.startLine('tank', $('best-start'));
+    }, 650);
   }
 
   function pause() {
     if (!s || !s.running) return;
     s.running = false; s.paused = true;
+    cancelAnimationFrame(raf);
     $('ov-pause').hidden = false;
   }
   function resume() {
@@ -355,33 +357,42 @@
     s.paused = false; s.running = true;
     $('ov-pause').hidden = true;
     last = performance.now();
+    cancelAnimationFrame(raf);
     raf = requestAnimationFrame(loop);
   }
 
   // ------------------------------------------------------------ input
   document.addEventListener('keydown', function (e) {
+    if (B.isOpen() || K.typing(e)) return;
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A' || e.key === 'ש') { move(-1); e.preventDefault(); }
     else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D' || e.key === 'ג') { move(1); e.preventDefault(); }
     else if (e.key === ' ' || e.key === 'Enter') {
-      if (!$('ov-start').hidden || !$('ov-over').hidden) { start(); e.preventDefault(); }
-      else if (s && s.paused) resume();
-    } else if (e.key === 'p' || e.key === 'Escape') { if (s && s.running) pause(); else resume(); }
+      if (!$('ov-start').hidden) { start(); e.preventDefault(); }
+      else if (s && s.paused) { resume(); e.preventDefault(); }
+    } else if (e.key === 'p' || e.key === 'P' || e.key === 'פ' || e.key === 'Escape') { if (s && s.running) pause(); else resume(); }
   });
   cv.addEventListener('pointerdown', function (e) {
+    e.preventDefault();
     var r = cv.getBoundingClientRect();
     move(e.clientX - r.left < r.width / 2 ? -1 : 1);
   });
-  $('btn-left').addEventListener('click', function () { move(-1); });
-  $('btn-right').addEventListener('click', function () { move(1); });
+  // כפתורי הטלפון מגיבים כבר בנגיעה (בלי לחכות לשחרור האצבע)
+  function padButton(btn, dir) {
+    btn.addEventListener('pointerdown', function (e) { e.preventDefault(); move(dir); });
+    btn.addEventListener('click', function (e) { if (e.detail === 0) move(dir); }); // מקלדת
+  }
+  padButton($('btn-left'), -1);
+  padButton($('btn-right'), 1);
   $('start').addEventListener('click', start);
-  $('again').addEventListener('click', start);
   $('resume').addEventListener('click', resume);
+  $('pause-btn').addEventListener('click', function () { if (s && s.running) pause(); else resume(); });
   document.addEventListener('visibilitychange', function () { if (document.hidden) pause(); });
   window.addEventListener('resize', resize);
+  if (window.ResizeObserver) new ResizeObserver(function () { resize(); }).observe(stage);
 
-  $('best-start').textContent = best ? 'השיא שלכם: ' + best : '';
+  B.startLine('tank', $('best-start'));
   resize();
-  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!s || !s.running) draw(0); });
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { if (!s || !s.running) draw(); });
 })();
 </script>
 </body>
